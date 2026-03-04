@@ -15,8 +15,13 @@ class Shift extends Model
         'name',
         'start_time',
         'end_time',
-        'grace_minutes',
         'crosses_midnight',
+        'lunch_required',
+        'lunch_duration_minutes',
+        'tolerance_minutes',
+        'overtime_enabled',
+        'overtime_min_block_minutes',
+        'max_daily_overtime_minutes',
         'is_active',
     ];
 
@@ -24,8 +29,13 @@ class Shift extends Model
     {
         return [
             'crosses_midnight' => 'boolean',
+            'lunch_required' => 'boolean',
+            'overtime_enabled' => 'boolean',
             'is_active' => 'boolean',
-            'grace_minutes' => 'integer',
+            'lunch_duration_minutes' => 'integer',
+            'tolerance_minutes' => 'integer',
+            'overtime_min_block_minutes' => 'integer',
+            'max_daily_overtime_minutes' => 'integer',
         ];
     }
 

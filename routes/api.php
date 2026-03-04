@@ -3,8 +3,10 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeShiftController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\SystemSettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/import', [ImportController::class, 'store']);
         Route::get('/import', [ImportController::class, 'index']);
         Route::get('/import/{importBatch}', [ImportController::class, 'show']);
+
+        // Employee shift assignments (read)
+        Route::get('/employees/{employee}/shifts', [EmployeeShiftController::class, 'index']);
+        Route::get('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'show']);
     });
 
     /*
@@ -40,8 +46,18 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('role:superadmin')->group(function () {
-        Route::apiResource('employees', EmployeeController::class)->only(['store', 'update', 'destroy']);
+        Route::apiResource('employees', EmployeeController::class)->only(['update']);
+        Route::patch('/employees/{employee}/toggle-active', [EmployeeController::class, 'toggleActive']);
         Route::apiResource('shifts', ShiftController::class)->only(['store', 'update', 'destroy']);
         Route::put('/attendance/{attendanceDay}', [AttendanceController::class, 'update']);
+
+        // Employee shift assignments (write)
+        Route::post('/employee-shifts', [EmployeeShiftController::class, 'store']);
+        Route::put('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'update']);
+        Route::delete('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'destroy']);
+
+        // System settings
+        Route::get('/settings', [SystemSettingController::class, 'index']);
+        Route::put('/settings', [SystemSettingController::class, 'update']);
     });
 });

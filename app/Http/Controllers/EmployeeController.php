@@ -2,47 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\Employee\UpdateEmployeeRequest;
+use App\Http\Resources\EmployeeResource;
+use App\Models\Employee;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
-        //
+        $employees = Employee::query()
+            ->with('shiftAssignments.shift')
+            ->orderBy('last_name')
+            ->paginate(20);
+
+        return EmployeeResource::collection($employees);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show(Employee $employee): EmployeeResource
     {
-        //
+        $employee->load('shiftAssignments.shift');
+
+        return new EmployeeResource($employee);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function update(UpdateEmployeeRequest $request, Employee $employee): EmployeeResource
     {
-        //
+        $employee->update($request->validated());
+
+        return new EmployeeResource($employee);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function toggleActive(Employee $employee): JsonResponse
     {
-        //
-    }
+        $employee->update(['is_active' => ! $employee->is_active]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $status = $employee->is_active ? 'activado' : 'desactivado';
+
+        return response()->json([
+            'message' => "Empleado {$status} correctamente.",
+            'is_active' => $employee->is_active,
+        ]);
     }
 }

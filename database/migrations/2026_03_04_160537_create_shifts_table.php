@@ -16,8 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->time('start_time');
             $table->time('end_time');
-            $table->unsignedSmallInteger('grace_minutes')->default(0);
             $table->boolean('crosses_midnight')->default(false);
+            $table->boolean('lunch_required')->default(false);
+            $table->unsignedSmallInteger('lunch_duration_minutes')->default(0);
+            $table->unsignedSmallInteger('tolerance_minutes')->default(0);
+            $table->boolean('overtime_enabled')->default(false);
+            $table->unsignedSmallInteger('overtime_min_block_minutes')->default(60);
+            $table->unsignedSmallInteger('max_daily_overtime_minutes')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

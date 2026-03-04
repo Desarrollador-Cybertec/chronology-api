@@ -1,0 +1,191 @@
+<?php
+
+namespace Tests\Feature\EmployeeShift;
+
+use App\Models\Employee;
+use App\Models\EmployeeShiftAssignment;
+use App\Models\Shift;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class EmployeeShiftTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_superadmin_can_list_employee_shifts(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+        EmployeeShiftAssignment::factory()->count(2)->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}/shifts");
+
+        $response->assertOk()
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_manager_can_list_employee_shifts(): void
+    {
+        $user = User::factory()->manager()->create();
+        $employee = Employee::factory()->create();
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}/shifts");
+
+        $response->assertOk();
+    }
+
+    public function test_superadmin_can_assign_shift_to_employee(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2025-01-01',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.effective_date', '2025-01-01');
+
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
+    }
+
+    public function test_superadmin_can_assign_shift_with_end_date(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2025-01-01',
+            'end_date' => '2025-06-30',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.end_date', '2025-06-30');
+    }
+
+    public function test_manager_cannot_create_employee_shift(): void
+    {
+        $user = User::factory()->manager()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2025-01-01',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_superadmin_can_show_employee_shift(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $assignment = EmployeeShiftAssignment::factory()->create();
+
+        $response = $this->actingAs($user)->getJson("/api/employee-shifts/{$assignment->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('data.id', $assignment->id);
+    }
+
+    public function test_superadmin_can_update_employee_shift(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $assignment = EmployeeShiftAssignment::factory()->create();
+        $newShift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->putJson("/api/employee-shifts/{$assignment->id}", [
+            'shift_id' => $newShift->id,
+            'effective_date' => '2025-03-01',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.shift_id', $newShift->id)
+            ->assertJsonPath('data.effective_date', '2025-03-01');
+    }
+
+    public function test_superadmin_can_delete_employee_shift(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $assignment = EmployeeShiftAssignment::factory()->create();
+
+        $response = $this->actingAs($user)->deleteJson("/api/employee-shifts/{$assignment->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Asignación eliminada correctamente.');
+
+        $this->assertDatabaseMissing('employee_shift_assignments', ['id' => $assignment->id]);
+    }
+
+    public function test_manager_cannot_delete_employee_shift(): void
+    {
+        $user = User::factory()->manager()->create();
+        $assignment = EmployeeShiftAssignment::factory()->create();
+
+        $response = $this->actingAs($user)->deleteJson("/api/employee-shifts/{$assignment->id}");
+
+        $response->assertStatus(403);
+    }
+
+    public function test_create_fails_with_nonexistent_employee(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => 9999,
+            'shift_id' => $shift->id,
+            'effective_date' => '2025-01-01',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('employee_id');
+    }
+
+    public function test_create_fails_with_nonexistent_shift(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => 9999,
+            'effective_date' => '2025-01-01',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('shift_id');
+    }
+
+    public function test_create_fails_when_end_date_before_effective_date(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2025-06-01',
+            'end_date' => '2025-01-01',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('end_date');
+    }
+}

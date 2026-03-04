@@ -32,7 +32,9 @@ class MigrationTest extends TestCase
         $this->assertTrue(Schema::hasTable('shifts'));
         $this->assertTrue(Schema::hasColumns('shifts', [
             'id', 'name', 'start_time', 'end_time',
-            'grace_minutes', 'crosses_midnight', 'is_active', 'created_at', 'updated_at',
+            'crosses_midnight', 'lunch_required', 'lunch_duration_minutes',
+            'tolerance_minutes', 'overtime_enabled', 'overtime_min_block_minutes',
+            'max_daily_overtime_minutes', 'is_active', 'created_at', 'updated_at',
         ]));
     }
 
