@@ -37,7 +37,7 @@ class ImportCsvTest extends TestCase
         ]);
     }
 
-    private function uploadCsv(string $content, string $filename = '../../marcaciones.csv'): UploadedFile
+    private function uploadCsv(string $content, string $filename = 'marcaciones.csv'): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($filename, $content);
     }
@@ -271,7 +271,7 @@ class ImportCsvTest extends TestCase
 
     public function test_real_biometric_csv_imports_successfully(): void
     {
-        $csvPath = base_path('tests/csv/Informe de los registros originales.csv');
+        $csvPath = base_path('tests/csv/algo.csv');
         $this->assertFileExists($csvPath, 'CSV real del biúmétrico no encontrado.');
 
         $user = User::factory()->superadmin()->create();
@@ -297,5 +297,46 @@ class ImportCsvTest extends TestCase
         $this->assertGreaterThan(0, \App\Models\Employee::count());
         $this->assertGreaterThan(0, \App\Models\RawLog::count());
         $this->assertEquals($batch->total_rows, \App\Models\RawLog::count());
+    }
+
+    public function test_import_index_returns_pagination_meta(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        ImportBatch::factory()->count(5)->create(['uploaded_by' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/import');
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'links' => ['first', 'last', 'prev', 'next'],
+                'meta' => ['current_page', 'from', 'last_page', 'per_page', 'to', 'total'],
+            ])
+            ->assertJsonPath('meta.total', 5)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
+    public function test_import_index_respects_per_page_parameter(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        ImportBatch::factory()->count(8)->create(['uploaded_by' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/import?per_page=3');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 3)
+            ->assertJsonCount(3, 'data');
+    }
+
+    public function test_import_index_supports_page_navigation(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        ImportBatch::factory()->count(5)->create(['uploaded_by' => $user->id]);
+
+        $response = $this->actingAs($user)->getJson('/api/import?per_page=3&page=2');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonCount(2, 'data');
     }
 }

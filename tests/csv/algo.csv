@@ -1,0 +1,201 @@
+ID de persona,Nombre,Departamento,Hora,Estado de asistencia,Punto de verificación de asistencia,Nombre personalizado,Fuente de datos,Gestión de informe,Temperatura,Anormal
+1,Ana Martínez,Logística,2026-02-11 12:20:00,Presente,Puerta Norte,Empleado 1,Manual,Automático,37.7,Sí
+2,Ana Martínez,TI,2026-02-11 06:04:00,Ausente,Puerta Sur,Empleado 2,Manual,Manual,37.7,Sí
+3,Pedro Ramírez,Finanzas,2026-02-11 13:57:00,Presente,Recepción,Empleado 3,API,Automático,36.3,No
+4,Diego Castro,TI,2026-02-11 06:20:00,Tarde,Puerta Sur,Empleado 4,API,Manual,36.2,No
+5,Ana Martínez,Logística,2026-02-11 06:10:00,Tarde,Puerta Sur,Empleado 5,Manual,Automático,37.2,No
+6,Pedro Ramírez,RRHH,2026-02-11 06:23:00,Ausente,Entrada Principal,Empleado 6,Dispositivo,Manual,37.5,No
+7,Carlos López,Operaciones,2026-02-11 13:16:00,Tarde,Recepción,Empleado 7,API,Automático,36.1,No
+8,Sofía Herrera,TI,2026-02-11 13:33:00,Tarde,Recepción,Empleado 8,Dispositivo,Manual,36.7,No
+9,María Gómez,TI,2026-02-11 10:34:00,Ausente,Recepción,Empleado 9,Dispositivo,Automático,36.0,No
+10,Pedro Ramírez,RRHH,2026-02-11 10:33:00,Presente,Puerta Sur,Empleado 10,Manual,Automático,36.7,No
+11,Ana Martínez,Logística,2026-02-11 14:15:00,Presente,Puerta Sur,Empleado 11,API,Manual,37.7,Sí
+12,Sofía Herrera,Ventas,2026-02-11 07:47:00,Ausente,Puerta Norte,Empleado 12,Dispositivo,Automático,36.2,No
+13,María Gómez,TI,2026-02-11 06:25:00,Tarde,Recepción,Empleado 13,Dispositivo,Manual,36.4,No
+14,Valentina Ríos,TI,2026-02-11 07:13:00,Tarde,Recepción,Empleado 14,API,Automático,37.6,Sí
+15,Luis Rodríguez,Operaciones,2026-02-11 14:16:00,Presente,Recepción,Empleado 15,API,Automático,36.8,No
+16,Carlos López,Logística,2026-02-11 10:37:00,Tarde,Puerta Norte,Empleado 16,Manual,Manual,37.2,No
+17,Carlos López,Finanzas,2026-02-11 14:33:00,Ausente,Recepción,Empleado 17,Dispositivo,Manual,36.6,No
+18,Diego Castro,RRHH,2026-02-11 15:59:00,Tarde,Puerta Norte,Empleado 18,Dispositivo,Automático,36.8,No
+19,Diego Castro,Logística,2026-02-11 12:40:00,Ausente,Recepción,Empleado 19,Dispositivo,Automático,36.2,No
+20,Sofía Herrera,TI,2026-02-11 12:32:00,Ausente,Puerta Norte,Empleado 20,Manual,Manual,36.6,No
+21,Juan Pérez,Operaciones,2026-02-11 14:58:00,Tarde,Puerta Norte,Empleado 21,Manual,Automático,36.4,No
+22,Sofía Herrera,TI,2026-02-11 06:51:00,Tarde,Entrada Principal,Empleado 22,API,Manual,37.8,Sí
+23,Laura Torres,Ventas,2026-02-11 10:01:00,Ausente,Puerta Sur,Empleado 23,Dispositivo,Manual,36.5,No
+24,Carlos López,RRHH,2026-02-11 10:42:00,Ausente,Recepción,Empleado 24,API,Manual,36.3,No
+25,Laura Torres,Operaciones,2026-02-11 09:12:00,Tarde,Recepción,Empleado 25,Dispositivo,Automático,36.8,No
+26,Diego Castro,Ventas,2026-02-11 13:49:00,Ausente,Puerta Sur,Empleado 26,Manual,Automático,36.7,No
+27,Diego Castro,RRHH,2026-02-11 06:38:00,Ausente,Entrada Principal,Empleado 27,API,Automático,37.2,No
+28,Juan Pérez,Logística,2026-02-11 07:02:00,Tarde,Puerta Norte,Empleado 28,Dispositivo,Automático,37.6,Sí
+29,Carlos López,Finanzas,2026-02-11 09:03:00,Tarde,Entrada Principal,Empleado 29,API,Manual,37.0,No
+30,Diego Castro,Finanzas,2026-02-11 08:13:00,Tarde,Puerta Sur,Empleado 30,API,Manual,36.6,No
+31,María Gómez,RRHH,2026-02-11 14:16:00,Tarde,Entrada Principal,Empleado 31,Manual,Manual,36.5,No
+32,Ana Martínez,RRHH,2026-02-11 09:08:00,Ausente,Puerta Norte,Empleado 32,Dispositivo,Automático,36.6,No
+33,María Gómez,TI,2026-02-11 14:43:00,Ausente,Recepción,Empleado 33,API,Automático,36.1,No
+34,María Gómez,RRHH,2026-02-11 11:36:00,Presente,Puerta Sur,Empleado 34,Dispositivo,Automático,37.0,No
+35,Laura Torres,TI,2026-02-11 13:59:00,Presente,Puerta Norte,Empleado 35,Manual,Manual,37.0,No
+36,Pedro Ramírez,RRHH,2026-02-11 06:37:00,Tarde,Recepción,Empleado 36,API,Automático,36.9,No
+37,Valentina Ríos,Operaciones,2026-02-11 10:28:00,Presente,Recepción,Empleado 37,Dispositivo,Manual,36.8,No
+38,Juan Pérez,Operaciones,2026-02-11 13:41:00,Presente,Puerta Norte,Empleado 38,API,Manual,36.7,No
+39,Ana Martínez,Logística,2026-02-11 15:38:00,Ausente,Entrada Principal,Empleado 39,API,Manual,36.1,No
+40,Sofía Herrera,TI,2026-02-11 13:31:00,Tarde,Puerta Sur,Empleado 40,Dispositivo,Manual,37.0,No
+41,Diego Castro,Ventas,2026-02-11 11:44:00,Tarde,Recepción,Empleado 41,Dispositivo,Manual,36.1,No
+42,Diego Castro,Ventas,2026-02-11 13:41:00,Tarde,Puerta Sur,Empleado 42,Dispositivo,Manual,36.5,No
+43,Juan Pérez,Operaciones,2026-02-11 12:33:00,Ausente,Recepción,Empleado 43,Dispositivo,Manual,37.1,No
+44,Ana Martínez,TI,2026-02-11 13:22:00,Presente,Recepción,Empleado 44,Dispositivo,Automático,36.7,No
+45,Laura Torres,Operaciones,2026-02-11 06:06:00,Ausente,Puerta Sur,Empleado 45,Manual,Automático,36.5,No
+46,Valentina Ríos,Ventas,2026-02-11 09:45:00,Ausente,Recepción,Empleado 46,API,Automático,36.1,No
+47,Pedro Ramírez,Ventas,2026-02-11 08:45:00,Tarde,Recepción,Empleado 47,Manual,Automático,37.5,No
+48,Luis Rodríguez,RRHH,2026-02-11 13:58:00,Presente,Puerta Norte,Empleado 48,API,Manual,36.1,No
+49,Carlos López,TI,2026-02-11 13:00:00,Presente,Entrada Principal,Empleado 49,Dispositivo,Automático,37.4,No
+50,Sofía Herrera,Finanzas,2026-02-11 12:06:00,Presente,Entrada Principal,Empleado 50,API,Automático,37.2,No
+51,Ana Martínez,Ventas,2026-02-11 09:53:00,Presente,Entrada Principal,Empleado 51,Manual,Automático,36.6,No
+52,María Gómez,Operaciones,2026-02-11 10:20:00,Ausente,Puerta Norte,Empleado 52,API,Automático,37.5,No
+53,Laura Torres,Finanzas,2026-02-11 15:24:00,Ausente,Recepción,Empleado 53,Dispositivo,Manual,37.6,Sí
+54,María Gómez,RRHH,2026-02-11 08:03:00,Ausente,Puerta Sur,Empleado 54,Dispositivo,Manual,36.0,No
+55,Laura Torres,RRHH,2026-02-11 06:58:00,Tarde,Puerta Norte,Empleado 55,API,Manual,36.7,No
+56,Carlos López,Ventas,2026-02-11 10:02:00,Tarde,Entrada Principal,Empleado 56,Dispositivo,Automático,36.0,No
+57,Luis Rodríguez,Logística,2026-02-11 11:07:00,Presente,Puerta Sur,Empleado 57,Dispositivo,Manual,37.0,No
+58,Valentina Ríos,Ventas,2026-02-11 06:23:00,Presente,Puerta Norte,Empleado 58,API,Automático,37.7,Sí
+59,Pedro Ramírez,RRHH,2026-02-11 12:59:00,Tarde,Puerta Sur,Empleado 59,API,Manual,37.6,Sí
+60,Juan Pérez,Operaciones,2026-02-11 07:37:00,Ausente,Recepción,Empleado 60,Dispositivo,Automático,36.2,No
+61,Juan Pérez,Logística,2026-02-11 07:09:00,Presente,Puerta Norte,Empleado 61,API,Automático,36.2,No
+62,Diego Castro,Logística,2026-02-11 12:04:00,Ausente,Puerta Norte,Empleado 62,API,Manual,36.5,No
+63,Diego Castro,Ventas,2026-02-11 07:44:00,Tarde,Puerta Sur,Empleado 63,API,Automático,36.7,No
+64,Laura Torres,Logística,2026-02-11 07:02:00,Tarde,Puerta Norte,Empleado 64,Manual,Automático,36.2,No
+65,Diego Castro,Logística,2026-02-11 06:17:00,Ausente,Puerta Norte,Empleado 65,API,Automático,37.7,Sí
+66,Carlos López,TI,2026-02-11 10:49:00,Presente,Recepción,Empleado 66,API,Manual,36.3,No
+67,Ana Martínez,Operaciones,2026-02-11 14:07:00,Presente,Entrada Principal,Empleado 67,Manual,Manual,36.2,No
+68,Sofía Herrera,Ventas,2026-02-11 09:07:00,Presente,Recepción,Empleado 68,Manual,Automático,37.6,Sí
+69,Ana Martínez,Finanzas,2026-02-11 11:57:00,Tarde,Entrada Principal,Empleado 69,Manual,Manual,37.1,No
+70,Luis Rodríguez,Finanzas,2026-02-11 07:49:00,Ausente,Entrada Principal,Empleado 70,API,Automático,37.6,Sí
+71,Carlos López,Ventas,2026-02-11 10:00:00,Ausente,Entrada Principal,Empleado 71,Dispositivo,Manual,36.7,No
+72,Sofía Herrera,Ventas,2026-02-11 08:51:00,Ausente,Puerta Norte,Empleado 72,API,Manual,37.1,No
+73,Valentina Ríos,RRHH,2026-02-11 10:44:00,Presente,Entrada Principal,Empleado 73,Dispositivo,Manual,37.1,No
+74,Pedro Ramírez,Logística,2026-02-11 07:22:00,Ausente,Recepción,Empleado 74,Manual,Automático,36.1,No
+75,Juan Pérez,RRHH,2026-02-11 06:41:00,Ausente,Recepción,Empleado 75,Manual,Automático,36.4,No
+76,Sofía Herrera,RRHH,2026-02-11 14:19:00,Presente,Entrada Principal,Empleado 76,Manual,Manual,36.7,No
+77,Juan Pérez,Finanzas,2026-02-11 09:44:00,Tarde,Recepción,Empleado 77,API,Manual,36.4,No
+78,Diego Castro,Operaciones,2026-02-11 08:15:00,Presente,Puerta Norte,Empleado 78,Dispositivo,Manual,36.4,No
+79,Laura Torres,Ventas,2026-02-11 06:02:00,Presente,Recepción,Empleado 79,Manual,Automático,36.9,No
+80,Diego Castro,TI,2026-02-11 08:23:00,Ausente,Recepción,Empleado 80,Dispositivo,Automático,37.6,Sí
+81,Valentina Ríos,Finanzas,2026-02-11 10:48:00,Tarde,Entrada Principal,Empleado 81,Manual,Automático,36.9,No
+82,Carlos López,Finanzas,2026-02-11 08:20:00,Tarde,Puerta Sur,Empleado 82,Manual,Automático,37.8,Sí
+83,Pedro Ramírez,Ventas,2026-02-11 12:07:00,Presente,Puerta Norte,Empleado 83,API,Manual,36.3,No
+84,Juan Pérez,Operaciones,2026-02-11 15:33:00,Ausente,Puerta Sur,Empleado 84,Manual,Automático,36.9,No
+85,Valentina Ríos,Finanzas,2026-02-11 10:48:00,Ausente,Puerta Norte,Empleado 85,Dispositivo,Automático,37.7,Sí
+86,Sofía Herrera,Ventas,2026-02-11 14:57:00,Presente,Puerta Norte,Empleado 86,API,Automático,36.2,No
+87,Carlos López,TI,2026-02-11 13:38:00,Presente,Entrada Principal,Empleado 87,Dispositivo,Manual,37.7,Sí
+88,Laura Torres,Logística,2026-02-11 09:25:00,Tarde,Puerta Norte,Empleado 88,Dispositivo,Manual,36.8,No
+89,Carlos López,Finanzas,2026-02-11 14:48:00,Presente,Puerta Norte,Empleado 89,API,Automático,36.6,No
+90,María Gómez,Operaciones,2026-02-11 12:32:00,Ausente,Puerta Norte,Empleado 90,API,Automático,37.8,Sí
+91,María Gómez,Operaciones,2026-02-11 07:36:00,Presente,Puerta Norte,Empleado 91,Dispositivo,Manual,37.7,Sí
+92,Ana Martínez,Ventas,2026-02-11 15:37:00,Ausente,Entrada Principal,Empleado 92,Manual,Manual,37.6,Sí
+93,Valentina Ríos,Finanzas,2026-02-11 11:24:00,Ausente,Entrada Principal,Empleado 93,Dispositivo,Automático,37.2,No
+94,Juan Pérez,TI,2026-02-11 13:50:00,Tarde,Puerta Norte,Empleado 94,Manual,Manual,37.6,Sí
+95,Juan Pérez,RRHH,2026-02-11 09:47:00,Ausente,Recepción,Empleado 95,Dispositivo,Automático,36.6,No
+96,María Gómez,Finanzas,2026-02-11 07:08:00,Ausente,Puerta Sur,Empleado 96,Manual,Automático,36.0,No
+97,Carlos López,Finanzas,2026-02-11 08:40:00,Ausente,Puerta Sur,Empleado 97,Manual,Manual,37.0,No
+98,Diego Castro,Finanzas,2026-02-11 12:27:00,Tarde,Entrada Principal,Empleado 98,Manual,Manual,37.1,No
+99,Juan Pérez,Finanzas,2026-02-11 09:40:00,Ausente,Entrada Principal,Empleado 99,Manual,Manual,37.7,Sí
+100,Luis Rodríguez,Ventas,2026-02-11 11:23:00,Presente,Entrada Principal,Empleado 100,API,Manual,37.6,Sí
+101,Laura Torres,Logística,2026-02-11 06:07:00,Tarde,Recepción,Empleado 101,API,Manual,36.5,No
+102,Diego Castro,Ventas,2026-02-11 12:51:00,Presente,Recepción,Empleado 102,Dispositivo,Manual,36.6,No
+103,Diego Castro,Finanzas,2026-02-11 09:13:00,Tarde,Puerta Sur,Empleado 103,API,Manual,36.2,No
+104,Laura Torres,TI,2026-02-11 07:56:00,Tarde,Entrada Principal,Empleado 104,API,Manual,37.6,Sí
+105,Carlos López,Logística,2026-02-11 11:34:00,Ausente,Puerta Sur,Empleado 105,API,Automático,37.7,Sí
+106,María Gómez,Logística,2026-02-11 07:02:00,Tarde,Puerta Sur,Empleado 106,Dispositivo,Automático,37.8,Sí
+107,Carlos López,RRHH,2026-02-11 10:22:00,Presente,Puerta Norte,Empleado 107,Manual,Automático,36.9,No
+108,Carlos López,RRHH,2026-02-11 15:46:00,Tarde,Puerta Norte,Empleado 108,Dispositivo,Automático,36.9,No
+109,Pedro Ramírez,TI,2026-02-11 12:38:00,Presente,Entrada Principal,Empleado 109,API,Automático,37.1,No
+110,Pedro Ramírez,RRHH,2026-02-11 12:25:00,Tarde,Entrada Principal,Empleado 110,Manual,Automático,37.0,No
+111,Laura Torres,RRHH,2026-02-11 12:50:00,Ausente,Puerta Norte,Empleado 111,Manual,Manual,36.8,No
+112,Carlos López,Operaciones,2026-02-11 14:18:00,Ausente,Puerta Norte,Empleado 112,API,Automático,36.9,No
+113,Sofía Herrera,Finanzas,2026-02-11 10:45:00,Presente,Puerta Sur,Empleado 113,Manual,Automático,36.9,No
+114,María Gómez,Logística,2026-02-11 12:53:00,Tarde,Puerta Norte,Empleado 114,API,Manual,36.5,No
+115,Carlos López,Logística,2026-02-11 12:02:00,Tarde,Puerta Sur,Empleado 115,Manual,Manual,37.6,Sí
+116,Carlos López,Ventas,2026-02-11 08:47:00,Presente,Puerta Norte,Empleado 116,Manual,Manual,37.0,No
+117,Laura Torres,TI,2026-02-11 08:34:00,Ausente,Puerta Sur,Empleado 117,Manual,Automático,36.1,No
+118,Valentina Ríos,TI,2026-02-11 12:57:00,Tarde,Puerta Norte,Empleado 118,Manual,Manual,36.1,No
+119,Sofía Herrera,Operaciones,2026-02-11 13:49:00,Presente,Puerta Norte,Empleado 119,Manual,Manual,36.3,No
+120,Valentina Ríos,RRHH,2026-02-11 06:38:00,Ausente,Puerta Sur,Empleado 120,Dispositivo,Manual,36.8,No
+121,Carlos López,Ventas,2026-02-11 11:28:00,Tarde,Entrada Principal,Empleado 121,Manual,Manual,37.6,Sí
+122,Luis Rodríguez,Operaciones,2026-02-11 07:45:00,Tarde,Recepción,Empleado 122,API,Manual,37.6,Sí
+123,Luis Rodríguez,Finanzas,2026-02-11 07:33:00,Ausente,Entrada Principal,Empleado 123,API,Automático,37.2,No
+124,Juan Pérez,Logística,2026-02-11 15:36:00,Presente,Puerta Norte,Empleado 124,Manual,Manual,37.2,No
+125,Pedro Ramírez,Operaciones,2026-02-11 07:18:00,Tarde,Puerta Sur,Empleado 125,Dispositivo,Manual,36.6,No
+126,Diego Castro,Operaciones,2026-02-11 10:21:00,Tarde,Entrada Principal,Empleado 126,Manual,Manual,37.0,No
+127,Valentina Ríos,Operaciones,2026-02-11 14:31:00,Tarde,Puerta Norte,Empleado 127,API,Automático,36.6,No
+128,Diego Castro,Logística,2026-02-11 12:07:00,Presente,Entrada Principal,Empleado 128,Manual,Automático,36.6,No
+129,Valentina Ríos,Ventas,2026-02-11 10:13:00,Tarde,Puerta Sur,Empleado 129,Dispositivo,Manual,37.1,No
+130,María Gómez,Operaciones,2026-02-11 14:21:00,Tarde,Recepción,Empleado 130,Manual,Automático,36.9,No
+131,Sofía Herrera,Finanzas,2026-02-11 07:54:00,Ausente,Recepción,Empleado 131,Dispositivo,Manual,37.6,Sí
+132,Valentina Ríos,Logística,2026-02-11 06:36:00,Ausente,Puerta Norte,Empleado 132,Manual,Automático,37.2,No
+133,Luis Rodríguez,RRHH,2026-02-11 06:41:00,Presente,Recepción,Empleado 133,Manual,Automático,37.1,No
+134,Laura Torres,TI,2026-02-11 10:33:00,Tarde,Puerta Norte,Empleado 134,Dispositivo,Automático,36.3,No
+135,Juan Pérez,Finanzas,2026-02-11 08:47:00,Presente,Recepción,Empleado 135,API,Manual,37.8,Sí
+136,María Gómez,TI,2026-02-11 13:28:00,Presente,Puerta Norte,Empleado 136,Manual,Manual,36.4,No
+137,Ana Martínez,Operaciones,2026-02-11 09:30:00,Tarde,Puerta Norte,Empleado 137,Manual,Manual,37.4,No
+138,Luis Rodríguez,Finanzas,2026-02-11 13:55:00,Tarde,Puerta Norte,Empleado 138,API,Automático,37.6,Sí
+139,Diego Castro,Finanzas,2026-02-11 08:53:00,Presente,Entrada Principal,Empleado 139,API,Manual,36.6,No
+140,Ana Martínez,Operaciones,2026-02-11 08:43:00,Presente,Puerta Sur,Empleado 140,API,Automático,37.1,No
+141,María Gómez,RRHH,2026-02-11 14:33:00,Presente,Puerta Norte,Empleado 141,Dispositivo,Automático,36.6,No
+142,Diego Castro,Finanzas,2026-02-11 14:02:00,Presente,Puerta Norte,Empleado 142,Dispositivo,Manual,36.9,No
+143,Laura Torres,Operaciones,2026-02-11 07:44:00,Presente,Puerta Norte,Empleado 143,API,Automático,37.1,No
+144,Diego Castro,Ventas,2026-02-11 13:41:00,Presente,Recepción,Empleado 144,Dispositivo,Manual,36.3,No
+145,Laura Torres,Operaciones,2026-02-11 13:01:00,Ausente,Entrada Principal,Empleado 145,Dispositivo,Automático,36.6,No
+146,Juan Pérez,TI,2026-02-11 07:53:00,Tarde,Puerta Norte,Empleado 146,API,Automático,36.6,No
+147,Diego Castro,Logística,2026-02-11 09:09:00,Tarde,Entrada Principal,Empleado 147,API,Automático,36.9,No
+148,Diego Castro,TI,2026-02-11 10:48:00,Tarde,Entrada Principal,Empleado 148,API,Automático,36.3,No
+149,Ana Martínez,TI,2026-02-11 12:59:00,Tarde,Puerta Sur,Empleado 149,Dispositivo,Automático,36.2,No
+150,Diego Castro,RRHH,2026-02-11 07:38:00,Presente,Puerta Sur,Empleado 150,Manual,Manual,36.0,No
+151,Pedro Ramírez,RRHH,2026-02-11 11:40:00,Ausente,Entrada Principal,Empleado 151,API,Automático,37.4,No
+152,Carlos López,TI,2026-02-11 10:52:00,Tarde,Entrada Principal,Empleado 152,API,Manual,37.1,No
+153,Juan Pérez,Ventas,2026-02-11 07:06:00,Tarde,Entrada Principal,Empleado 153,Dispositivo,Automático,37.2,No
+154,Sofía Herrera,RRHH,2026-02-11 14:01:00,Presente,Recepción,Empleado 154,Dispositivo,Manual,36.8,No
+155,Valentina Ríos,Ventas,2026-02-11 10:02:00,Presente,Entrada Principal,Empleado 155,Manual,Automático,37.5,No
+156,Carlos López,Finanzas,2026-02-11 15:40:00,Presente,Recepción,Empleado 156,Manual,Manual,36.3,No
+157,Ana Martínez,Ventas,2026-02-11 10:12:00,Presente,Puerta Norte,Empleado 157,Dispositivo,Manual,37.1,No
+158,Laura Torres,TI,2026-02-11 06:11:00,Tarde,Entrada Principal,Empleado 158,Dispositivo,Automático,36.3,No
+159,Juan Pérez,RRHH,2026-02-11 06:51:00,Ausente,Puerta Norte,Empleado 159,API,Automático,36.1,No
+160,Sofía Herrera,Ventas,2026-02-11 07:44:00,Ausente,Puerta Sur,Empleado 160,API,Manual,37.6,Sí
+161,Laura Torres,RRHH,2026-02-11 15:00:00,Presente,Puerta Norte,Empleado 161,Dispositivo,Automático,36.1,No
+162,Juan Pérez,Operaciones,2026-02-11 07:16:00,Ausente,Entrada Principal,Empleado 162,Manual,Manual,36.7,No
+163,Juan Pérez,Logística,2026-02-11 11:36:00,Tarde,Recepción,Empleado 163,API,Automático,36.4,No
+164,Pedro Ramírez,Ventas,2026-02-11 15:14:00,Ausente,Puerta Norte,Empleado 164,Dispositivo,Manual,37.2,No
+165,Carlos López,Operaciones,2026-02-11 14:09:00,Tarde,Entrada Principal,Empleado 165,Manual,Automático,36.7,No
+166,Valentina Ríos,Ventas,2026-02-11 06:16:00,Tarde,Entrada Principal,Empleado 166,Dispositivo,Manual,37.7,Sí
+167,Ana Martínez,Logística,2026-02-11 10:30:00,Ausente,Puerta Sur,Empleado 167,Dispositivo,Manual,36.2,No
+168,Ana Martínez,Finanzas,2026-02-11 14:12:00,Tarde,Puerta Norte,Empleado 168,Manual,Manual,36.6,No
+169,Luis Rodríguez,Ventas,2026-02-11 13:53:00,Presente,Puerta Norte,Empleado 169,API,Automático,36.9,No
+170,Valentina Ríos,Finanzas,2026-02-11 08:57:00,Ausente,Puerta Norte,Empleado 170,Manual,Automático,37.0,No
+171,María Gómez,Operaciones,2026-02-11 15:59:00,Ausente,Puerta Norte,Empleado 171,Manual,Automático,37.3,No
+172,Ana Martínez,Ventas,2026-02-11 08:20:00,Ausente,Recepción,Empleado 172,Manual,Automático,37.2,No
+173,Carlos López,Finanzas,2026-02-11 06:06:00,Presente,Entrada Principal,Empleado 173,Dispositivo,Manual,37.0,No
+174,Juan Pérez,Operaciones,2026-02-11 09:47:00,Tarde,Recepción,Empleado 174,Manual,Automático,37.0,No
+175,Ana Martínez,Ventas,2026-02-11 07:44:00,Presente,Entrada Principal,Empleado 175,Dispositivo,Manual,36.2,No
+176,María Gómez,TI,2026-02-11 10:45:00,Ausente,Entrada Principal,Empleado 176,Dispositivo,Manual,37.2,No
+177,Carlos López,TI,2026-02-11 07:32:00,Ausente,Recepción,Empleado 177,Dispositivo,Automático,37.7,Sí
+178,Sofía Herrera,Finanzas,2026-02-11 07:56:00,Tarde,Recepción,Empleado 178,API,Manual,37.0,No
+179,Laura Torres,Logística,2026-02-11 13:09:00,Ausente,Recepción,Empleado 179,API,Automático,37.7,Sí
+180,Diego Castro,TI,2026-02-11 13:09:00,Presente,Recepción,Empleado 180,Dispositivo,Manual,36.1,No
+181,Carlos López,RRHH,2026-02-11 11:49:00,Ausente,Recepción,Empleado 181,Manual,Automático,37.2,No
+182,Carlos López,TI,2026-02-11 08:12:00,Tarde,Entrada Principal,Empleado 182,API,Manual,36.4,No
+183,Diego Castro,Operaciones,2026-02-11 15:35:00,Presente,Puerta Sur,Empleado 183,API,Automático,37.4,No
+184,Sofía Herrera,RRHH,2026-02-11 13:39:00,Ausente,Puerta Sur,Empleado 184,Dispositivo,Automático,37.3,No
+185,María Gómez,Finanzas,2026-02-11 13:32:00,Presente,Puerta Norte,Empleado 185,Manual,Automático,36.0,No
+186,María Gómez,TI,2026-02-11 13:13:00,Tarde,Recepción,Empleado 186,API,Automático,36.4,No
+187,Sofía Herrera,Operaciones,2026-02-11 09:48:00,Ausente,Puerta Sur,Empleado 187,Manual,Automático,36.6,No
+188,Valentina Ríos,Operaciones,2026-02-11 09:25:00,Presente,Puerta Norte,Empleado 188,Dispositivo,Manual,37.6,Sí
+189,Sofía Herrera,RRHH,2026-02-11 08:26:00,Presente,Puerta Norte,Empleado 189,Manual,Manual,36.3,No
+190,Sofía Herrera,Ventas,2026-02-11 09:28:00,Presente,Recepción,Empleado 190,Manual,Automático,37.8,Sí
+191,María Gómez,Logística,2026-02-11 12:22:00,Ausente,Entrada Principal,Empleado 191,API,Automático,37.0,No
+192,María Gómez,Operaciones,2026-02-11 11:05:00,Tarde,Puerta Sur,Empleado 192,Dispositivo,Manual,37.5,No
+193,Laura Torres,RRHH,2026-02-11 11:22:00,Tarde,Recepción,Empleado 193,API,Manual,37.3,No
+194,Laura Torres,RRHH,2026-02-11 09:09:00,Presente,Puerta Norte,Empleado 194,Manual,Automático,37.8,Sí
+195,Luis Rodríguez,Ventas,2026-02-11 15:59:00,Presente,Puerta Sur,Empleado 195,Dispositivo,Manual,36.1,No
+196,Carlos López,Logística,2026-02-11 15:13:00,Presente,Entrada Principal,Empleado 196,API,Manual,37.4,No
+197,Ana Martínez,Logística,2026-02-11 08:50:00,Ausente,Entrada Principal,Empleado 197,API,Manual,37.2,No
+198,Pedro Ramírez,Finanzas,2026-02-11 12:10:00,Ausente,Recepción,Empleado 198,Dispositivo,Automático,37.8,Sí
+199,Diego Castro,RRHH,2026-02-11 07:48:00,Tarde,Recepción,Empleado 199,Dispositivo,Manual,36.4,No
+200,María Gómez,Ventas,2026-02-11 09:00:00,Ausente,Entrada Principal,Empleado 200,API,Automático,36.5,No

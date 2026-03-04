@@ -7,16 +7,20 @@ use App\Http\Requests\Import\StoreImportRequest;
 use App\Http\Resources\ImportBatchResource;
 use App\Models\ImportBatch;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ImportController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = min((int) $request->integer('per_page', 15), 100);
+
         $batches = ImportBatch::query()
             ->with('uploadedBy')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return ImportBatchResource::collection($batches);
     }

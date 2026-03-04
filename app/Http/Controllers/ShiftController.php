@@ -7,15 +7,19 @@ use App\Http\Requests\Shift\UpdateShiftRequest;
 use App\Http\Resources\ShiftResource;
 use App\Models\Shift;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ShiftController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = min((int) $request->integer('per_page', 15), 100);
+
         $shifts = Shift::query()
             ->orderBy('name')
-            ->paginate(20);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return ShiftResource::collection($shifts);
     }

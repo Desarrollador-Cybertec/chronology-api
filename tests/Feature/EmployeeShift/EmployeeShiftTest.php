@@ -188,4 +188,48 @@ class EmployeeShiftTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors('end_date');
     }
+
+    public function test_employee_shifts_index_returns_pagination_meta(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        EmployeeShiftAssignment::factory()->count(5)->create(['employee_id' => $employee->id]);
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}/shifts");
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'links' => ['first', 'last', 'prev', 'next'],
+                'meta' => ['current_page', 'from', 'last_page', 'per_page', 'to', 'total'],
+            ])
+            ->assertJsonPath('meta.total', 5)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
+    public function test_employee_shifts_index_respects_per_page_parameter(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        EmployeeShiftAssignment::factory()->count(6)->create(['employee_id' => $employee->id]);
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}/shifts?per_page=4");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 4)
+            ->assertJsonCount(4, 'data');
+    }
+
+    public function test_employee_shifts_index_supports_page_navigation(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        EmployeeShiftAssignment::factory()->count(5)->create(['employee_id' => $employee->id]);
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}/shifts?per_page=3&page=2");
+
+        $response->assertOk()
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonCount(2, 'data');
+    }
 }

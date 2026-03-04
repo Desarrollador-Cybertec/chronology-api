@@ -162,4 +162,55 @@ class EmployeeCrudTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_employees_index_returns_pagination_meta(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees');
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'links' => ['first', 'last', 'prev', 'next'],
+                'meta' => ['current_page', 'from', 'last_page', 'per_page', 'to', 'total'],
+            ])
+            ->assertJsonPath('meta.total', 5)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
+    public function test_employees_index_respects_per_page_parameter(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->count(10)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees?per_page=3');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 3)
+            ->assertJsonCount(3, 'data');
+    }
+
+    public function test_employees_index_supports_page_navigation(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees?per_page=3&page=2');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_employees_index_caps_per_page_at_100(): void
+    {
+        $user = User::factory()->superadmin()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees?per_page=500');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
+    }
 }

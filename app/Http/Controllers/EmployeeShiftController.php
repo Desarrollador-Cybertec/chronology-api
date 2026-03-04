@@ -8,16 +8,20 @@ use App\Http\Resources\EmployeeShiftAssignmentResource;
 use App\Models\Employee;
 use App\Models\EmployeeShiftAssignment;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeShiftController extends Controller
 {
-    public function index(Employee $employee): AnonymousResourceCollection
+    public function index(Employee $employee, Request $request): AnonymousResourceCollection
     {
+        $perPage = min((int) $request->integer('per_page', 15), 100);
+
         $assignments = $employee->shiftAssignments()
             ->with('shift')
             ->orderByDesc('effective_date')
-            ->paginate(20);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return EmployeeShiftAssignmentResource::collection($assignments);
     }

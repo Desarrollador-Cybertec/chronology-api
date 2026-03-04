@@ -197,4 +197,55 @@ class ShiftCrudTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors('tolerance_minutes');
     }
+
+    public function test_shifts_index_returns_pagination_meta(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Shift::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/shifts');
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data',
+                'links' => ['first', 'last', 'prev', 'next'],
+                'meta' => ['current_page', 'from', 'last_page', 'per_page', 'to', 'total'],
+            ])
+            ->assertJsonPath('meta.total', 5)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
+    public function test_shifts_index_respects_per_page_parameter(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Shift::factory()->count(10)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/shifts?per_page=4');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 4)
+            ->assertJsonCount(4, 'data');
+    }
+
+    public function test_shifts_index_supports_page_navigation(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Shift::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/shifts?per_page=3&page=2');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.current_page', 2)
+            ->assertJsonCount(2, 'data');
+    }
+
+    public function test_shifts_index_caps_per_page_at_100(): void
+    {
+        $user = User::factory()->superadmin()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/shifts?per_page=999');
+
+        $response->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
+    }
 }
