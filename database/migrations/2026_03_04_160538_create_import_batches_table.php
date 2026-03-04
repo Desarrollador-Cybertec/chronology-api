@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('import_batches', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('uploaded_by')->constrained('users');
+            $table->string('original_filename');
+            $table->string('stored_path');
+            $table->string('file_hash')->unique();
+            $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');
+            $table->unsignedInteger('total_rows')->default(0);
+            $table->unsignedInteger('processed_rows')->default(0);
+            $table->unsignedInteger('failed_rows')->default(0);
+            $table->json('errors')->nullable();
+            $table->timestamp('processed_at')->nullable();
             $table->timestamps();
         });
     }

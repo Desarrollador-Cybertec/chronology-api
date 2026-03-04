@@ -6,24 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class RawLog extends Model
+class EmployeeShiftAssignment extends Model
 {
-    /** @use HasFactory<\Database\Factories\RawLogFactory> */
+    /** @use HasFactory<\Database\Factories\EmployeeShiftAssignmentFactory> */
     use HasFactory;
 
     protected $fillable = [
         'employee_id',
-        'import_batch_id',
-        'check_time',
-        'date_reference',
-        'original_line',
+        'shift_id',
+        'effective_date',
+        'end_date',
     ];
 
     protected function casts(): array
     {
         return [
-            'check_time' => 'datetime',
-            'date_reference' => 'date',
+            'effective_date' => 'date',
+            'end_date' => 'date',
         ];
     }
 
@@ -32,8 +31,8 @@ class RawLog extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function importBatch(): BelongsTo
+    public function shift(): BelongsTo
     {
-        return $this->belongsTo(ImportBatch::class);
+        return $this->belongsTo(Shift::class);
     }
 }

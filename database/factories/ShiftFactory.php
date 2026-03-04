@@ -17,7 +17,22 @@ class ShiftFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->randomElement(['Matutino', 'Vespertino', 'Nocturno']).'-'.fake()->unique()->numerify('##'),
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'grace_minutes' => 10,
+            'crosses_midnight' => false,
+            'is_active' => true,
         ];
+    }
+
+    public function nightShift(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Nocturno-'.fake()->unique()->numerify('##'),
+            'start_time' => '22:00',
+            'end_time' => '06:00',
+            'crosses_midnight' => true,
+        ]);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Employee;
+use App\Models\Shift;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +18,31 @@ class AttendanceDayFactory extends Factory
      */
     public function definition(): array
     {
+        $date = fake()->dateTimeBetween('-30 days', 'now');
+
         return [
-            //
+            'employee_id' => Employee::factory(),
+            'date_reference' => $date->format('Y-m-d'),
+            'shift_id' => Shift::factory(),
+            'first_check_in' => $date->format('Y-m-d').' 08:05:00',
+            'last_check_out' => $date->format('Y-m-d').' 17:02:00',
+            'worked_minutes' => 537,
+            'overtime_minutes' => 0,
+            'late_minutes' => 5,
+            'status' => 'present',
+            'is_manually_edited' => false,
         ];
+    }
+
+    public function absent(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'first_check_in' => null,
+            'last_check_out' => null,
+            'worked_minutes' => 0,
+            'overtime_minutes' => 0,
+            'late_minutes' => 0,
+            'status' => 'absent',
+        ]);
     }
 }

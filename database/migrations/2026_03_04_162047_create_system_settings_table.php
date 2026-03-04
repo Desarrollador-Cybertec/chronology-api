@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('shifts', function (Blueprint $table) {
+        Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->unsignedSmallInteger('grace_minutes')->default(0);
-            $table->boolean('crosses_midnight')->default(false);
-            $table->boolean('is_active')->default(true);
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('group')->default('general');
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shifts');
+        Schema::dropIfExists('system_settings');
     }
 };

@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\AttendanceDay;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +19,12 @@ class AttendanceEditFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'attendance_day_id' => AttendanceDay::factory(),
+            'edited_by' => User::factory(),
+            'field_changed' => fake()->randomElement(['first_check_in', 'last_check_out', 'status']),
+            'old_value' => '08:05:00',
+            'new_value' => '08:00:00',
+            'reason' => fake()->sentence(),
         ];
     }
 }

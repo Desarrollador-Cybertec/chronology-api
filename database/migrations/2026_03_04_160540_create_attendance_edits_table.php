@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('attendance_edits', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('attendance_day_id')->constrained('attendance_days');
+            $table->foreignId('edited_by')->constrained('users');
+            $table->string('field_changed');
+            $table->string('old_value')->nullable();
+            $table->string('new_value')->nullable();
+            $table->text('reason')->nullable();
             $table->timestamps();
         });
     }

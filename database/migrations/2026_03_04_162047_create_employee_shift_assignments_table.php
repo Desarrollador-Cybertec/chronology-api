@@ -11,16 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('raw_logs', function (Blueprint $table) {
+        Schema::create('employee_shift_assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('employees');
-            $table->foreignId('import_batch_id')->constrained('import_batches');
-            $table->dateTime('check_time');
-            $table->date('date_reference');
-            $table->string('original_line')->nullable();
+            $table->foreignId('shift_id')->constrained('shifts');
+            $table->date('effective_date');
+            $table->date('end_date')->nullable();
             $table->timestamps();
 
-            $table->index(['employee_id', 'check_time']);
+            $table->index(['employee_id', 'effective_date']);
         });
     }
 
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('raw_logs');
+        Schema::dropIfExists('employee_shift_assignments');
     }
 };

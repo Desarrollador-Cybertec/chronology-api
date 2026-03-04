@@ -38,6 +38,12 @@ return [
             'report' => false,
         ],
 
+        'csv_imports' => [
+            'driver' => 'local',
+            'root' => storage_path('app/csv_imports'),
+            'throw' => true,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
