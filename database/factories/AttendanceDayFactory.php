@@ -18,7 +18,7 @@ class AttendanceDayFactory extends Factory
      */
     public function definition(): array
     {
-        $date = fake()->dateTimeBetween('-30 days', 'now');
+        $date = fake()->unique()->dateTimeBetween('-30 days', 'now');
 
         return [
             'employee_id' => Employee::factory(),

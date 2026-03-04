@@ -30,6 +30,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('employees', EmployeeController::class)->only(['index', 'show']);
         Route::apiResource('shifts', ShiftController::class)->only(['index', 'show']);
         Route::get('/attendance', [AttendanceController::class, 'index']);
+        Route::get('/attendance/day/{date}', [AttendanceController::class, 'byDate']);
+        Route::get('/attendance/employee/{employee}', [AttendanceController::class, 'byEmployee']);
         Route::get('/attendance/{attendanceDay}', [AttendanceController::class, 'show']);
         Route::post('/import', [ImportController::class, 'store']);
         Route::get('/import', [ImportController::class, 'index']);
