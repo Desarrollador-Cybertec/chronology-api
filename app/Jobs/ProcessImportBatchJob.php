@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\ImportBatch;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -9,19 +10,17 @@ class ProcessImportBatchJob implements ShouldQueue
 {
     use Queueable;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(public ImportBatch $batch) {}
 
     /**
-     * Execute the job.
+     * Process the import batch through the attendance engine.
+     * This will be fully implemented in Sprint 4.
      */
     public function handle(): void
     {
-        //
+        $this->batch->update([
+            'status' => 'completed',
+            'processed_at' => now(),
+        ]);
     }
 }
