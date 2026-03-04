@@ -37,7 +37,7 @@ class ImportCsvTest extends TestCase
         ]);
     }
 
-    private function uploadCsv(string $content, string $filename = 'marcaciones.csv'): UploadedFile
+    private function uploadCsv(string $content, string $filename = '../../marcaciones.csv'): UploadedFile
     {
         return UploadedFile::fake()->createWithContent($filename, $content);
     }

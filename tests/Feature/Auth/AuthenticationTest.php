@@ -29,32 +29,23 @@ class AuthenticationTest extends TestCase
         ]);
     }
 
-    public function test_user_can_register_as_superadmin(): void
+    public function test_registration_ignores_role_field(): void
     {
         $response = $this->postJson('/api/register', [
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+            'name' => 'Sneaky User',
+            'email' => 'sneaky@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'role' => 'superadmin',
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('user.role', 'superadmin');
-    }
+            ->assertJsonPath('user.role', 'manager');
 
-    public function test_registration_fails_with_invalid_role(): void
-    {
-        $response = $this->postJson('/api/register', [
-            'name' => 'Bad User',
-            'email' => 'bad@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'role' => 'hacker',
+        $this->assertDatabaseHas('users', [
+            'email' => 'sneaky@example.com',
+            'role' => 'manager',
         ]);
-
-        $response->assertStatus(422)
-            ->assertJsonValidationErrors('role');
     }
 
     public function test_registration_fails_with_duplicate_email(): void

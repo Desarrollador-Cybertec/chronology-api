@@ -28,7 +28,10 @@ class AttendanceDayFactory extends Factory
             'last_check_out' => $date->format('Y-m-d').' 17:02:00',
             'worked_minutes' => 537,
             'overtime_minutes' => 0,
+            'overtime_diurnal_minutes' => 0,
+            'overtime_nocturnal_minutes' => 0,
             'late_minutes' => 5,
+            'early_departure_minutes' => 0,
             'status' => 'present',
             'is_manually_edited' => false,
         ];

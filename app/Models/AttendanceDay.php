@@ -20,7 +20,10 @@ class AttendanceDay extends Model
         'last_check_out',
         'worked_minutes',
         'overtime_minutes',
+        'overtime_diurnal_minutes',
+        'overtime_nocturnal_minutes',
         'late_minutes',
+        'early_departure_minutes',
         'status',
         'is_manually_edited',
     ];
@@ -33,7 +36,10 @@ class AttendanceDay extends Model
             'last_check_out' => 'datetime',
             'worked_minutes' => 'integer',
             'overtime_minutes' => 'integer',
+            'overtime_diurnal_minutes' => 'integer',
+            'overtime_nocturnal_minutes' => 'integer',
             'late_minutes' => 'integer',
+            'early_departure_minutes' => 'integer',
             'is_manually_edited' => 'boolean',
         ];
     }
