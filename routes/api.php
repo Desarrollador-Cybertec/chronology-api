@@ -51,6 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('shifts', ShiftController::class)->only(['store', 'update', 'destroy']);
         Route::put('/attendance/{attendanceDay}', [AttendanceController::class, 'update']);
 
+        // Import reprocessing
+        Route::post('/import/{importBatch}/reprocess', [ImportController::class, 'reprocess']);
+
         // Employee shift assignments (write)
         Route::post('/employee-shifts', [EmployeeShiftController::class, 'store']);
         Route::put('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'update']);

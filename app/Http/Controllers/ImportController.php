@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Attendance\ReprocessBatchAction;
 use App\Actions\Import\ImportCsvAction;
 use App\Http\Requests\Import\StoreImportRequest;
 use App\Http\Resources\ImportBatchResource;
@@ -50,5 +51,16 @@ class ImportController extends Controller
         $importBatch->load('uploadedBy');
 
         return new ImportBatchResource($importBatch);
+    }
+
+    public function reprocess(ImportBatch $importBatch, ReprocessBatchAction $action): JsonResponse
+    {
+        $result = $action->execute($importBatch);
+
+        return response()->json([
+            'message' => 'Batch reprocessing started.',
+            'deleted_attendance_days' => $result['deleted'],
+            'groups_to_process' => $result['groups'],
+        ]);
     }
 }
