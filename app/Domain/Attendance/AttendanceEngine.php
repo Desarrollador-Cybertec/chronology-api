@@ -26,6 +26,8 @@ class AttendanceEngine
      * @param  int  $noiseWindowMinutes  Noise window for LogReducer
      * @param  bool  $autoAssignShift  Whether to auto-assign a shift if none exists
      * @param  int  $autoAssignToleranceMinutes  Tolerance window for auto-assignment matching
+     * @param  string  $diurnalStartTime  Start of diurnal period
+     * @param  string  $nocturnalStartTime  Start of nocturnal period
      */
     public function process(
         Collection $rawLogs,
@@ -34,6 +36,8 @@ class AttendanceEngine
         int $noiseWindowMinutes = 60,
         bool $autoAssignShift = false,
         int $autoAssignToleranceMinutes = 30,
+        string $diurnalStartTime = '06:00',
+        string $nocturnalStartTime = '20:00',
     ): AttendanceResult {
         $reducedLogs = $this->logReducer->reduce($rawLogs, $noiseWindowMinutes);
 
@@ -49,6 +53,6 @@ class AttendanceEngine
             );
         }
 
-        return $this->calculator->calculate($reducedLogs, $shift, $dateReference);
+        return $this->calculator->calculate($reducedLogs, $shift, $dateReference, $diurnalStartTime, $nocturnalStartTime);
     }
 }

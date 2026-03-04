@@ -22,12 +22,19 @@ class AttendanceCalculator
      * @param  Collection  $reducedLogs  Noise-filtered RawLog entries
      * @param  Shift|null  $shift  Resolved shift for the employee
      * @param  Carbon  $dateReference  The date being processed
+     * @param  string  $diurnalStartTime  Start of diurnal period
+     * @param  string  $nocturnalStartTime  Start of nocturnal period
      */
-    public function calculate(Collection $reducedLogs, ?Shift $shift, Carbon $dateReference): AttendanceResult
-    {
+    public function calculate(
+        Collection $reducedLogs,
+        ?Shift $shift,
+        Carbon $dateReference,
+        string $diurnalStartTime = '06:00',
+        string $nocturnalStartTime = '20:00',
+    ): AttendanceResult {
         $result = $this->dayBuilder->build($reducedLogs, $shift);
         $result = $this->lateCalculator->calculate($result, $dateReference);
-        $result = $this->overtimeCalculator->calculate($result, $dateReference);
+        $result = $this->overtimeCalculator->calculate($result, $dateReference, $diurnalStartTime, $nocturnalStartTime);
 
         return $result;
     }

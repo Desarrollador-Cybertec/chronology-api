@@ -238,7 +238,7 @@ class AttendanceEngineTest extends TestCase
 
         $this->assertEquals('present', $result->status);
         $this->assertEquals('08:00', $result->firstCheck->format('H:i'));
-        $this->assertEquals('17:03', $result->lastCheck->format('H:i'));
+        $this->assertEquals('17:00', $result->lastCheck->format('H:i'));
     }
 
     public function test_night_shift_full_pipeline(): void

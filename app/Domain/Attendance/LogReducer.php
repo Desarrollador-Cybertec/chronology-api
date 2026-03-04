@@ -11,8 +11,9 @@ class LogReducer
     /**
      * Reduce noise from raw log entries.
      *
-     * Groups consecutive punches within noiseWindowMinutes and
-     * keeps only the first and last from each group.
+     * Groups consecutive punches within noiseWindowMinutes (compared
+     * against the first mark in each group) and keeps only the first
+     * mark from each group.
      *
      * @param  Collection  $logs  Collection of RawLog models
      * @param  int  $noiseWindowMinutes  Minimum gap to consider a new event
@@ -20,40 +21,25 @@ class LogReducer
      */
     public function reduce(Collection $logs, int $noiseWindowMinutes = self::DEFAULT_NOISE_WINDOW): Collection
     {
-        if ($logs->count() <= 2) {
-            return $logs->sortBy('check_time')->values();
+        if ($logs->isEmpty()) {
+            return collect();
         }
 
         $sorted = $logs->sortBy('check_time')->values();
-        $groups = collect();
-        $currentGroup = collect([$sorted->first()]);
+        $result = collect();
+        $groupAnchor = $sorted->first();
+        $result->push($groupAnchor);
 
         for ($i = 1; $i < $sorted->count(); $i++) {
             $current = $sorted[$i];
-            $lastInGroup = $currentGroup->last();
+            $diffMinutes = (int) $groupAnchor->check_time->diffInMinutes($current->check_time);
 
-            $diffMinutes = $lastInGroup->check_time->diffInMinutes($current->check_time);
-
-            if ($diffMinutes < $noiseWindowMinutes) {
-                $currentGroup->push($current);
-            } else {
-                $groups->push($currentGroup);
-                $currentGroup = collect([$current]);
+            if ($diffMinutes >= $noiseWindowMinutes) {
+                $groupAnchor = $current;
+                $result->push($groupAnchor);
             }
         }
 
-        $groups->push($currentGroup);
-
-        $result = collect();
-
-        foreach ($groups as $group) {
-            $result->push($group->first());
-
-            if ($group->count() > 1) {
-                $result->push($group->last());
-            }
-        }
-
-        return $result->sortBy('check_time')->values();
+        return $result->values();
     }
 }

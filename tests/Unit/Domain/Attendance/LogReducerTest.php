@@ -44,7 +44,7 @@ class LogReducerTest extends TestCase
         $this->assertCount(2, $result);
     }
 
-    public function test_reduces_noise_cluster_to_first_and_last(): void
+    public function test_reduces_noise_cluster_to_first_only(): void
     {
         $logs = collect([
             new RawLog(['check_time' => '2026-01-15 08:00:00']),
@@ -55,9 +55,8 @@ class LogReducerTest extends TestCase
 
         $result = $this->reducer->reduce($logs);
 
-        $this->assertCount(2, $result);
+        $this->assertCount(1, $result);
         $this->assertEquals('2026-01-15 08:00:00', $result->first()->check_time->format('Y-m-d H:i:s'));
-        $this->assertEquals('2026-01-15 08:10:00', $result->last()->check_time->format('Y-m-d H:i:s'));
     }
 
     public function test_preserves_separate_clusters(): void
@@ -71,11 +70,9 @@ class LogReducerTest extends TestCase
 
         $result = $this->reducer->reduce($logs);
 
-        $this->assertCount(4, $result);
+        $this->assertCount(2, $result);
         $this->assertEquals('08:00', $result[0]->check_time->format('H:i'));
-        $this->assertEquals('08:03', $result[1]->check_time->format('H:i'));
-        $this->assertEquals('17:00', $result[2]->check_time->format('H:i'));
-        $this->assertEquals('17:02', $result[3]->check_time->format('H:i'));
+        $this->assertEquals('17:00', $result[1]->check_time->format('H:i'));
     }
 
     public function test_handles_custom_noise_window(): void
@@ -90,7 +87,7 @@ class LogReducerTest extends TestCase
         $resultWide = $this->reducer->reduce($logs, 60);
         $this->assertCount(2, $resultWide);
 
-        $resultNarrow = $this->reducer->reduce($logs, 30);
+        $resultNarrow = $this->reducer->reduce($logs, 10);
         $this->assertCount(4, $resultNarrow);
     }
 
@@ -123,12 +120,31 @@ class LogReducerTest extends TestCase
 
         $result = $this->reducer->reduce($logs);
 
-        $this->assertCount(6, $result);
+        $this->assertCount(3, $result);
         $this->assertEquals('08:00', $result[0]->check_time->format('H:i'));
-        $this->assertEquals('08:05', $result[1]->check_time->format('H:i'));
-        $this->assertEquals('12:00', $result[2]->check_time->format('H:i'));
-        $this->assertEquals('12:03', $result[3]->check_time->format('H:i'));
-        $this->assertEquals('17:00', $result[4]->check_time->format('H:i'));
-        $this->assertEquals('17:04', $result[5]->check_time->format('H:i'));
+        $this->assertEquals('12:00', $result[1]->check_time->format('H:i'));
+        $this->assertEquals('17:00', $result[2]->check_time->format('H:i'));
+    }
+
+    public function test_document_example_lunch_break_preserved(): void
+    {
+        $logs = collect([
+            new RawLog(['check_time' => '2026-01-15 07:59:00']),
+            new RawLog(['check_time' => '2026-01-15 08:00:00']),
+            new RawLog(['check_time' => '2026-01-15 08:01:00']),
+            new RawLog(['check_time' => '2026-01-15 12:00:00']),
+            new RawLog(['check_time' => '2026-01-15 12:02:00']),
+            new RawLog(['check_time' => '2026-01-15 13:01:00']),
+            new RawLog(['check_time' => '2026-01-15 13:02:00']),
+            new RawLog(['check_time' => '2026-01-15 17:05:00']),
+        ]);
+
+        $result = $this->reducer->reduce($logs);
+
+        $this->assertCount(4, $result);
+        $this->assertEquals('07:59', $result[0]->check_time->format('H:i'));
+        $this->assertEquals('12:00', $result[1]->check_time->format('H:i'));
+        $this->assertEquals('13:01', $result[2]->check_time->format('H:i'));
+        $this->assertEquals('17:05', $result[3]->check_time->format('H:i'));
     }
 }

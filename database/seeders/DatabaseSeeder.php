@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employee;
 use App\Models\Shift;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -18,17 +17,21 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Users
         User::factory()->superadmin()->create([
             'name' => 'Super Admin',
             'email' => 'admin@chronology.test',
+            'password' => bcrypt('test123'),
         ]);
 
         User::factory()->manager()->create([
             'name' => 'Manager User',
             'email' => 'manager@chronology.test',
+            'password' => bcrypt('test123'),
         ]);
 
-        $shifts = Shift::factory()->count(3)->sequence(
+        // Shifts
+        Shift::factory()->count(3)->sequence(
             [
                 'name' => 'Matutino',
                 'start_time' => '06:00',
@@ -56,15 +59,6 @@ class DatabaseSeeder extends Seeder
                 'max_daily_overtime_minutes' => 240,
             ],
         )->create();
-
-        $employees = Employee::factory()->count(10)->create();
-
-        $employees->each(function (Employee $employee) use ($shifts) {
-            $employee->shiftAssignments()->create([
-                'shift_id' => $shifts->random()->id,
-                'effective_date' => now()->subDays(30),
-            ]);
-        });
 
         // System settings
         $settings = [

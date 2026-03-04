@@ -36,6 +36,8 @@ class ProcessAttendanceDayJob implements ShouldQueue
         $noiseWindow = (int) SystemSetting::getValue('noise_window_minutes', '60');
         $autoAssign = SystemSetting::getValue('auto_assign_shift', 'true') === 'true';
         $autoAssignTolerance = (int) SystemSetting::getValue('auto_assign_tolerance_minutes', '30');
+        $diurnalStart = SystemSetting::getValue('diurnal_start_time', '06:00');
+        $nocturnalStart = SystemSetting::getValue('nocturnal_start_time', '20:00');
 
         $result = $engine->process(
             $rawLogs,
@@ -44,6 +46,8 @@ class ProcessAttendanceDayJob implements ShouldQueue
             $noiseWindow,
             $autoAssign,
             $autoAssignTolerance,
+            $diurnalStart,
+            $nocturnalStart,
         );
 
         AttendanceDay::updateOrCreate(

@@ -139,20 +139,23 @@ class OvertimeCalculatorTest extends TestCase
 
     public function test_splits_nocturnal_overtime(): void
     {
-        $shift = $this->makeShift(['overtime_min_block_minutes' => 60]);
+        $shift = $this->makeShift([
+            'overtime_min_block_minutes' => 60,
+            'max_daily_overtime_minutes' => 240,
+        ]);
         $result = new AttendanceResult(
             firstCheck: Carbon::parse('2026-01-15 08:00:00'),
-            lastCheck: Carbon::parse('2026-01-15 19:30:00'),
-            workedMinutes: 690,
+            lastCheck: Carbon::parse('2026-01-15 21:30:00'),
+            workedMinutes: 810,
             status: 'present',
             shift: $shift,
         );
 
         $result = $this->calculator->calculate($result, Carbon::parse('2026-01-15'));
 
-        $this->assertEquals(150, $result->overtimeMinutes);
-        $this->assertEquals(60, $result->overtimeDiurnalMinutes);
-        $this->assertEquals(90, $result->overtimeNocturnalMinutes);
+        $this->assertEquals(240, $result->overtimeMinutes);
+        $this->assertEquals(180, $result->overtimeDiurnalMinutes);
+        $this->assertEquals(60, $result->overtimeNocturnalMinutes);
     }
 
     public function test_night_shift_overtime_is_all_after_shift_end(): void
