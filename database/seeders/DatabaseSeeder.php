@@ -71,6 +71,8 @@ class DatabaseSeeder extends Seeder
             ['key' => 'noise_window_minutes', 'value' => '60', 'group' => 'attendance'],
             ['key' => 'diurnal_start_time', 'value' => '06:00', 'group' => 'attendance'],
             ['key' => 'nocturnal_start_time', 'value' => '20:00', 'group' => 'attendance'],
+            ['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance'],
+            ['key' => 'auto_assign_tolerance_minutes', 'value' => '30', 'group' => 'attendance'],
             ['key' => 'data_retention_months', 'value' => '24', 'group' => 'general'],
         ];
 

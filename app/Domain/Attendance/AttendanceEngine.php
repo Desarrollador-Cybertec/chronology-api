@@ -11,28 +11,43 @@ class AttendanceEngine
         private LogReducer $logReducer,
         private ShiftResolver $shiftResolver,
         private AttendanceCalculator $calculator,
+        private AutoShiftAssigner $autoShiftAssigner,
     ) {}
 
     /**
      * Process attendance for an employee on a given date.
      *
-     * Pipeline: LogReducer → ShiftResolver → AttendanceCalculator
+     * Pipeline: LogReducer → ShiftResolver (→ AutoShiftAssigner) → AttendanceCalculator
      * (which internally runs: AttendanceDayBuilder → LateCalculator → OvertimeCalculator)
      *
      * @param  Collection  $rawLogs  RawLog entries for this employee+date
      * @param  int  $employeeId  The employee being processed
      * @param  Carbon  $dateReference  The date being processed
      * @param  int  $noiseWindowMinutes  Noise window for LogReducer
+     * @param  bool  $autoAssignShift  Whether to auto-assign a shift if none exists
+     * @param  int  $autoAssignToleranceMinutes  Tolerance window for auto-assignment matching
      */
     public function process(
         Collection $rawLogs,
         int $employeeId,
         Carbon $dateReference,
         int $noiseWindowMinutes = 60,
+        bool $autoAssignShift = false,
+        int $autoAssignToleranceMinutes = 30,
     ): AttendanceResult {
         $reducedLogs = $this->logReducer->reduce($rawLogs, $noiseWindowMinutes);
 
         $shift = $this->shiftResolver->resolve($employeeId, $dateReference);
+
+        if (! $shift && $autoAssignShift && $reducedLogs->isNotEmpty()) {
+            $firstCheckIn = $reducedLogs->sortBy('check_time')->first()->check_time;
+            $shift = $this->autoShiftAssigner->assign(
+                $employeeId,
+                $dateReference,
+                $firstCheckIn,
+                $autoAssignToleranceMinutes,
+            );
+        }
 
         return $this->calculator->calculate($reducedLogs, $shift, $dateReference);
     }

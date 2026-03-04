@@ -580,6 +580,24 @@
 
         <div class="sidebar-section">
 
+            <div class="sidebar-section-label">Asistencia</div>
+
+            <a href="#ep-attendance-index"><span class="method-dot" style="background:var(--get)"></span> Listar</a>
+
+            <a href="#ep-attendance-show"><span class="method-dot" style="background:var(--get)"></span> Ver detalle</a>
+
+            <a href="#ep-attendance-employee"><span class="method-dot" style="background:var(--get)"></span> Por empleado</a>
+
+            <a href="#ep-attendance-date"><span class="method-dot" style="background:var(--get)"></span> Por fecha</a>
+
+            <a href="#ep-attendance-update"><span class="method-dot" style="background:var(--put)"></span> Editar</a>
+
+        </div>
+
+
+
+        <div class="sidebar-section">
+
             <div class="sidebar-section-label">Importación CSV</div>
 
             <a href="#ep-import-store"><span class="method-dot" style="background:var(--post)"></span> Subir CSV</a>
@@ -587,6 +605,8 @@
             <a href="#ep-import-index"><span class="method-dot" style="background:var(--get)"></span> Listar batches</a>
 
             <a href="#ep-import-show"><span class="method-dot" style="background:var(--get)"></span> Ver batch</a>
+
+            <a href="#ep-import-reprocess"><span class="method-dot" style="background:var(--post)"></span> Reprocesar</a>
 
         </div>
 
@@ -1486,17 +1506,578 @@
 
 
 
+        <!-- ═══════════════ ASISTENCIA ═══════════════════════════ -->
+
+        <div class="section" id="asistencia">
+
+            <div class="section-title">Asistencia</div>
+
+            <div class="alert alert-info" style="margin-bottom:20px">
+
+                <span>ℹ️</span>
+
+                <span>Los registros de asistencia se generan automáticamente al procesar un CSV importado. Cada registro corresponde a un empleado en un día específico.</span>
+
+            </div>
+
+
+
+            <!-- GET /attendance -->
+
+            <div class="endpoint" id="ep-attendance-index">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/attendance</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Lista registros de asistencia con filtros y paginación. Incluye empleado y turno.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Query params — filtros</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Param</th><th>Tipo</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">employee_id</td><td class="param-type">integer</td><td class="param-desc">Filtrar por ID de empleado</td></tr>
+
+                            <tr><td class="param-name">date</td><td class="param-type">date</td><td class="param-desc">Fecha exacta (<code>2026-01-15</code>)</td></tr>
+
+                            <tr><td class="param-name">date_from</td><td class="param-type">date</td><td class="param-desc">Desde fecha (inclusive)</td></tr>
+
+                            <tr><td class="param-name">date_to</td><td class="param-type">date</td><td class="param-desc">Hasta fecha (inclusive)</td></tr>
+
+                            <tr><td class="param-name">status</td><td class="param-type">string</td><td class="param-desc"><code>present</code>, <code>absent</code>, <code>incomplete</code>, <code>rest</code>, <code>holiday</code></td></tr>
+
+                            <tr><td class="param-name">has_overtime</td><td class="param-type">boolean</td><td class="param-desc"><code>1</code> = solo con horas extra</td></tr>
+
+                            <tr><td class="param-name">has_late</td><td class="param-type">boolean</td><td class="param-desc"><code>1</code> = solo con tardanza</td></tr>
+
+                            <tr><td class="param-name">per_page</td><td class="param-type">integer</td><td class="param-desc">Resultados por página (default: 15, max: 100)</td></tr>
+
+                            <tr><td class="param-name">page</td><td class="param-type">integer</td><td class="param-desc">Número de página</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"data"</span>: <span class="kw">[{</span>
+
+    <span class="key">"id"</span>:                        <span class="num">1</span>,
+
+    <span class="key">"employee_id"</span>:               <span class="num">5</span>,
+
+    <span class="key">"employee"</span>:                  <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">5</span>, <span class="key">"first_name"</span>: <span class="str">"JUAN"</span>, <span class="key">"..."</span> <span class="kw">}</span>,
+
+    <span class="key">"date_reference"</span>:            <span class="str">"2026-01-15"</span>,
+
+    <span class="key">"shift_id"</span>:                  <span class="num">2</span>,
+
+    <span class="key">"shift"</span>:                     <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">2</span>, <span class="key">"name"</span>: <span class="str">"Diurno"</span>, <span class="key">"..."</span> <span class="kw">}</span>,
+
+    <span class="key">"first_check_in"</span>:            <span class="str">"2026-01-15 08:05:00"</span>,
+
+    <span class="key">"last_check_out"</span>:            <span class="str">"2026-01-15 17:02:00"</span>,
+
+    <span class="key">"worked_minutes"</span>:            <span class="num">537</span>,
+
+    <span class="key">"overtime_minutes"</span>:           <span class="num">0</span>,
+
+    <span class="key">"overtime_diurnal_minutes"</span>:   <span class="num">0</span>,
+
+    <span class="key">"overtime_nocturnal_minutes"</span>: <span class="num">0</span>,
+
+    <span class="key">"late_minutes"</span>:              <span class="num">5</span>,
+
+    <span class="key">"early_departure_minutes"</span>:   <span class="num">0</span>,
+
+    <span class="key">"status"</span>:                    <span class="str">"present"</span>,
+
+    <span class="key">"is_manually_edited"</span>:        <span class="boo">false</span>
+
+  <span class="kw">}]</span>,
+
+  <span class="key">"links"</span>: <span class="kw">{...}</span>,
+
+  <span class="key">"meta"</span>:  <span class="kw">{</span> <span class="key">"current_page"</span>: <span class="num">1</span>, <span class="key">"total"</span>: <span class="num">120</span>, <span class="key">"per_page"</span>: <span class="num">15</span> <span class="kw">}</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- GET /attendance/{id} -->
+
+            <div class="endpoint" id="ep-attendance-show">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/attendance/{id}</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Detalle de un registro de asistencia incluyendo empleado, turno e historial de ediciones manuales.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"data"</span>: <span class="kw">{</span>
+
+    <span class="key">"id"</span>:                 <span class="num">1</span>,
+
+    <span class="key">"employee"</span>:           <span class="kw">{...}</span>,
+
+    <span class="key">"shift"</span>:              <span class="kw">{...}</span>,
+
+    <span class="key">"date_reference"</span>:     <span class="str">"2026-01-15"</span>,
+
+    <span class="key">"worked_minutes"</span>:     <span class="num">537</span>,
+
+    <span class="key">"status"</span>:             <span class="str">"present"</span>,
+
+    <span class="key">"is_manually_edited"</span>: <span class="boo">true</span>,
+
+    <span class="key">"edits"</span>: <span class="kw">[{</span>
+
+      <span class="key">"id"</span>:            <span class="num">1</span>,
+
+      <span class="key">"field_changed"</span>: <span class="str">"status"</span>,
+
+      <span class="key">"old_value"</span>:    <span class="str">"absent"</span>,
+
+      <span class="key">"new_value"</span>:    <span class="str">"present"</span>,
+
+      <span class="key">"reason"</span>:       <span class="str">"Corrección de marcaje"</span>,
+
+      <span class="key">"editor"</span>:       <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> <span class="kw">}</span>,
+
+      <span class="key">"created_at"</span>:   <span class="str">"2026-01-16T10:00:00"</span>
+
+    <span class="kw">}]</span>
+
+  <span class="kw">}</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- GET /attendance/employee/{employee} -->
+
+            <div class="endpoint" id="ep-attendance-employee">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/attendance/employee/{employee}</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Lista los registros de asistencia de un empleado específico. Soporta filtros por rango de fecha y estado.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Query params opcionales</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Param</th><th>Tipo</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">date_from</td><td class="param-type">date</td><td class="param-desc">Desde fecha (inclusive)</td></tr>
+
+                            <tr><td class="param-name">date_to</td><td class="param-type">date</td><td class="param-desc">Hasta fecha (inclusive)</td></tr>
+
+                            <tr><td class="param-name">status</td><td class="param-type">string</td><td class="param-desc">Filtrar por estado</td></tr>
+
+                            <tr><td class="param-name">per_page</td><td class="param-type">integer</td><td class="param-desc">Resultados por página (default: 15)</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- GET /attendance/day/{date} -->
+
+            <div class="endpoint" id="ep-attendance-date">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/attendance/day/{date}</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Lista la asistencia de todos los empleados para una fecha específica. Útil para reportes diarios.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Parámetro de ruta</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Param</th><th>Tipo</th><th>Ejemplo</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">date</td><td class="param-type">date</td><td class="param-desc"><code>2026-01-15</code></td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="block-label">Query params opcionales</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Param</th><th>Tipo</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">status</td><td class="param-type">string</td><td class="param-desc">Filtrar por estado</td></tr>
+
+                            <tr><td class="param-name">per_page</td><td class="param-type">integer</td><td class="param-desc">Resultados por página (default: 15)</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PUT /attendance/{id} -->
+
+            <div class="endpoint" id="ep-attendance-update">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-put">PUT</span>
+
+                    <span class="endpoint-path">/api/attendance/{id}</span>
+
+                    <span class="role-badge role-superadmin">superadmin</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">
+
+                        Edición manual de un registro de asistencia. Cada campo modificado genera un registro en <code>attendance_edits</code>
+
+                        con valor anterior, nuevo y razón. Marca el día como <code>is_manually_edited = true</code>.
+
+                    </p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Body (JSON)</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Campo</th><th>Tipo</th><th>Regla</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">first_check_in</td><td class="param-type">datetime</td><td class="param-opt">opcional</td><td class="param-desc">Hora de entrada</td></tr>
+
+                            <tr><td class="param-name">last_check_out</td><td class="param-type">datetime</td><td class="param-opt">opcional</td><td class="param-desc">Hora de salida</td></tr>
+
+                            <tr><td class="param-name">worked_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">Minutos trabajados</td></tr>
+
+                            <tr><td class="param-name">overtime_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">Total horas extra</td></tr>
+
+                            <tr><td class="param-name">overtime_diurnal_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">HE diurnas</td></tr>
+
+                            <tr><td class="param-name">overtime_nocturnal_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">HE nocturnas</td></tr>
+
+                            <tr><td class="param-name">late_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">Minutos de tardanza</td></tr>
+
+                            <tr><td class="param-name">early_departure_minutes</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">Minutos de salida temprana</td></tr>
+
+                            <tr><td class="param-name">status</td><td class="param-type">string</td><td class="param-opt">opcional</td><td class="param-desc"><code>present</code> <code>absent</code> <code>incomplete</code> <code>rest</code> <code>holiday</code></td></tr>
+
+                            <tr><td class="param-name">reason</td><td class="param-type">string</td><td class="param-req">requerido</td><td class="param-desc">Motivo de la edición (max 500 caracteres)</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="block-label">Ejemplo</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"status"</span>:         <span class="str">"present"</span>,
+
+  <span class="key">"worked_minutes"</span>: <span class="num">540</span>,
+
+  <span class="key">"late_minutes"</span>:   <span class="num">0</span>,
+
+  <span class="key">"reason"</span>:         <span class="str">"Reloj biométrico no registró entrada, pero empleado estaba presente"</span>
+
+<span class="kw">}</span></pre></div>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"data"</span>: <span class="kw">{</span>
+
+    <span class="key">"id"</span>: <span class="num">1</span>,
+
+    <span class="key">"status"</span>: <span class="str">"present"</span>,
+
+    <span class="key">"is_manually_edited"</span>: <span class="boo">true</span>,
+
+    <span class="key">"edits"</span>: <span class="kw">[{</span>
+
+      <span class="key">"field_changed"</span>: <span class="str">"status"</span>,
+
+      <span class="key">"old_value"</span>: <span class="str">"absent"</span>,
+
+      <span class="key">"new_value"</span>: <span class="str">"present"</span>,
+
+      <span class="key">"reason"</span>: <span class="str">"Reloj biométrico no registró..."</span>,
+
+      <span class="key">"editor"</span>: <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Admin"</span> <span class="kw">}</span>
+
+    <span class="kw">}]</span>,
+
+    <span class="key">"..."</span>
+
+  <span class="kw">}</span>,
+
+  <span class="key">"edits_created"</span>: <span class="num">2</span>
+
+<span class="kw">}</span></pre></div>
+
+                    <div class="alert alert-info">
+
+                        <span>ℹ️</span>
+
+                        <span>Si un campo no cambió realmente (valor anterior = valor nuevo), no se crea registro de edición para ese campo.</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
         <!-- ═══════════════ IMPORTACIÓN CSV ═════════════════════ -->
 
         <div class="section" id="importacion">
 
             <div class="section-title">Importación CSV</div>
 
+
+
+            <!-- Configuración previa requerida -->
+
+            <div style="background:#111827; border:1px solid #374151; border-radius:10px; padding:20px 24px; margin-bottom:20px">
+
+                <div style="font-size:1rem; font-weight:700; color:#f3f4f6; margin-bottom:12px">📋 Configuración previa requerida</div>
+
+                <p style="color:#9ca3af; font-size:0.85rem; margin-bottom:14px">Antes de subir un CSV, asegúrese de que el sistema tenga la siguiente configuración:</p>
+
+
+
+                <!-- 1. Turnos -->
+
+                <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start">
+
+                    <span style="background:#10b981; color:#fff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:2px">REQUERIDO</span>
+
+                    <div>
+
+                        <div style="color:#e5e7eb; font-weight:600; font-size:0.85rem">Turnos (<code style="color:#a78bfa">POST /api/shifts</code>)</div>
+
+                        <p style="color:#9ca3af; font-size:0.8rem; margin:4px 0 0 0">
+
+                            Debe existir al menos un turno activo con <code>start_time</code>, <code>end_time</code> y <code>tolerance_minutes</code> configurados.
+
+                            Sin turnos, la asistencia se procesa sin cálculos de tardanza, horas extra ni deducción de almuerzo — el campo <code>shift_id</code> queda <code>null</code>.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 2. Asignación de turno o auto-assign -->
+
+                <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start">
+
+                    <span style="background:#f59e0b; color:#111; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:2px">RECOMENDADO</span>
+
+                    <div>
+
+                        <div style="color:#e5e7eb; font-weight:600; font-size:0.85rem">Asignación de turno a empleados (<code style="color:#a78bfa">POST /api/employee-shifts</code>)</div>
+
+                        <p style="color:#9ca3af; font-size:0.8rem; margin:4px 0 0 0">
+
+                            Si los empleados ya tienen turno asignado, se usa ese turno directamente.
+
+                            Si no tienen asignación y <code>auto_assign_shift</code> está activo (por defecto: <code>true</code>), el sistema intenta asignarles un turno automáticamente basándose en su hora de entrada.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 3. System settings -->
+
+                <div style="display:flex; gap:10px; margin-bottom:12px; align-items:flex-start">
+
+                    <span style="background:#6366f1; color:#fff; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:2px">OPCIONAL</span>
+
+                    <div>
+
+                        <div style="color:#e5e7eb; font-weight:600; font-size:0.85rem">Configuración del sistema (<code style="color:#a78bfa">PUT /api/settings</code>)</div>
+
+                        <p style="color:#9ca3af; font-size:0.8rem; margin:4px 0 0 0">
+
+                            Los settings tienen valores por defecto seguros si no están configurados:
+
+                        </p>
+
+                        <table style="width:100%; margin-top:8px; font-size:0.78rem; border-collapse:collapse">
+
+                            <thead><tr style="border-bottom:1px solid #374151; color:#9ca3af">
+
+                                <th style="text-align:left; padding:4px 8px">Setting</th>
+
+                                <th style="text-align:left; padding:4px 8px">Default</th>
+
+                                <th style="text-align:left; padding:4px 8px">Descripción</th>
+
+                            </tr></thead>
+
+                            <tbody style="color:#d1d5db">
+
+                                <tr><td style="padding:4px 8px"><code>noise_window_minutes</code></td><td style="padding:4px 8px"><code>60</code></td><td style="padding:4px 8px">Ventana (min) para filtrar marcajes duplicados del biométrico</td></tr>
+
+                                <tr><td style="padding:4px 8px"><code>auto_assign_shift</code></td><td style="padding:4px 8px"><code>true</code></td><td style="padding:4px 8px">Habilitar auto-asignación de turno si el empleado no tiene uno</td></tr>
+
+                                <tr><td style="padding:4px 8px"><code>auto_assign_tolerance_minutes</code></td><td style="padding:4px 8px"><code>30</code></td><td style="padding:4px 8px">Ventana (±min) alrededor del inicio de turno para considerar match</td></tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- 4. Empleados -->
+
+                <div style="display:flex; gap:10px; align-items:flex-start">
+
+                    <span style="background:#374151; color:#d1d5db; font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:4px; white-space:nowrap; margin-top:2px">AUTOMÁTICO</span>
+
+                    <div>
+
+                        <div style="color:#e5e7eb; font-weight:600; font-size:0.85rem">Empleados</div>
+
+                        <p style="color:#9ca3af; font-size:0.8rem; margin:4px 0 0 0">
+
+                            No es necesario crearlos previamente. Se crean automáticamente al importar el CSV usando la columna <code>ID de persona</code> como <code>internal_id</code>.
+
+                            Si el empleado ya existe (mismo <code>internal_id</code>), se reutiliza.
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
             <div class="alert alert-warn" style="margin-bottom:20px">
 
                 <span>⚠️</span>
 
                 <span>El CSV debe ser la exportación del reloj biométrico. Columnas requeridas: <code>ID de persona</code>, <code>Hora</code>. Tamaño máximo: 10 MB. El archivo se procesa en background vía cola.</span>
+
+            </div>
+
+            <div class="alert alert-info" style="margin-bottom:20px">
+
+                <span>ℹ️</span>
+
+                <span><strong>Auto-asignación de turno:</strong> Si un empleado no tiene turno asignado y su hora de entrada coincide con el inicio de algún turno activo (± tolerancia configurable), se le asigna automáticamente.
+                    Controlado por los settings <code>auto_assign_shift</code> y <code>auto_assign_tolerance_minutes</code>.</span>
 
             </div>
 
@@ -1716,6 +2297,60 @@ Content-Type: multipart/form-data</div>
 
             </div>
 
+
+
+            <!-- POST /import/{id}/reprocess -->
+
+            <div class="endpoint" id="ep-import-reprocess">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-post">POST</span>
+
+                    <span class="endpoint-path">/api/import/{id}/reprocess</span>
+
+                    <span class="role-badge role-superadmin">superadmin</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">
+
+                        Reprocesa un batch de importación: elimina los registros de asistencia generados (excepto los editados manualmente),
+
+                        reinicia el estado del batch y redespacha los jobs de procesamiento.
+
+                    </p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="alert alert-warn">
+
+                        <span>⚠️</span>
+
+                        <span>Los registros con <code>is_manually_edited = true</code> <strong>no se eliminan</strong> durante el reprocesamiento para preservar correcciones manuales.</span>
+
+                    </div>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"message"</span>:                <span class="str">"Batch reprocessing started."</span>,
+
+  <span class="key">"deleted_attendance_days"</span>: <span class="num">45</span>,
+
+  <span class="key">"groups_to_process"</span>:      <span class="num">12</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
         </div>
 
 
@@ -1768,7 +2403,11 @@ Content-Type: multipart/form-data</div>
 
     <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"nocturnal_start_time"</span>, <span class="key">"value"</span>: <span class="str">"20:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,  <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,  <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_shift"</span>,    <span class="key">"value"</span>: <span class="str">"true"</span>,  <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_tolerance_minutes"</span>, <span class="key">"value"</span>: <span class="str">"30"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>
 
   <span class="kw">]</span>
 

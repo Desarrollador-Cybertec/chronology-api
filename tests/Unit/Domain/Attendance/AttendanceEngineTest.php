@@ -5,6 +5,7 @@ namespace Tests\Unit\Domain\Attendance;
 use App\Domain\Attendance\AttendanceCalculator;
 use App\Domain\Attendance\AttendanceDayBuilder;
 use App\Domain\Attendance\AttendanceEngine;
+use App\Domain\Attendance\AutoShiftAssigner;
 use App\Domain\Attendance\LateCalculator;
 use App\Domain\Attendance\LogReducer;
 use App\Domain\Attendance\OvertimeCalculator;
@@ -35,6 +36,7 @@ class AttendanceEngineTest extends TestCase
                 new LateCalculator,
                 new OvertimeCalculator,
             ),
+            new AutoShiftAssigner,
         );
     }
 

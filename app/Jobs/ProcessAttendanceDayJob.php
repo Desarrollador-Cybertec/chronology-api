@@ -34,8 +34,17 @@ class ProcessAttendanceDayJob implements ShouldQueue
             ->get();
 
         $noiseWindow = (int) SystemSetting::getValue('noise_window_minutes', '60');
+        $autoAssign = SystemSetting::getValue('auto_assign_shift', 'true') === 'true';
+        $autoAssignTolerance = (int) SystemSetting::getValue('auto_assign_tolerance_minutes', '30');
 
-        $result = $engine->process($rawLogs, $this->employeeId, $date, $noiseWindow);
+        $result = $engine->process(
+            $rawLogs,
+            $this->employeeId,
+            $date,
+            $noiseWindow,
+            $autoAssign,
+            $autoAssignTolerance,
+        );
 
         AttendanceDay::updateOrCreate(
             [
