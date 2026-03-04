@@ -20,11 +20,9 @@ class AuthController extends Controller
             'role' => 'manager',
         ]);
 
-        $token = $user->createToken('auth-token')->plainTextToken;
-
         return response()->json([
             'user' => $user,
-            'token' => $token,
+            'message' => 'Usuario registrado exitosamente. Use /api/login para obtener un token.',
         ], 201);
     }
 

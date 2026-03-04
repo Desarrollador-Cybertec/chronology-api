@@ -744,11 +744,19 @@
 
                     <div class="code-block"><pre><span class="kw">{</span>
 
-  <span class="key">"user"</span>:  <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Ana Torres"</span>, <span class="key">"email"</span>: <span class="str">"ana@empresa.com"</span>, <span class="key">"role"</span>: <span class="str">"manager"</span> <span class="kw">}</span>,
+  <span class="key">"user"</span>:    <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"name"</span>: <span class="str">"Ana Torres"</span>, <span class="key">"email"</span>: <span class="str">"ana@empresa.com"</span>, <span class="key">"role"</span>: <span class="str">"manager"</span> <span class="kw">}</span>,
 
-  <span class="key">"token"</span>: <span class="str">"1|abcdef1234567890..."</span>
+  <span class="key">"message"</span>: <span class="str">"Usuario registrado exitosamente. Use /api/login para obtener un token."</span>
 
 <span class="kw">}</span></pre></div>
+
+                    <div class="alert alert-info">
+
+                        <span>ℹ️</span>
+
+                        <span>El registro no devuelve token. Use <code>POST /api/login</code> para autenticarse después de registrarse.</span>
+
+                    </div>
 
                 </div>
 
