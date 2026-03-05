@@ -45,8 +45,7 @@ class AttendanceEngine
 
         if (! $shift && $autoAssignShift && $reducedLogs->isNotEmpty()) {
             $firstCheckIn = $reducedLogs->sortBy('check_time')->first()->check_time;
-            $shift = $this->autoShiftAssigner->assign(
-                $employeeId,
+            $shift = $this->autoShiftAssigner->resolve(
                 $dateReference,
                 $firstCheckIn,
                 $autoAssignToleranceMinutes,

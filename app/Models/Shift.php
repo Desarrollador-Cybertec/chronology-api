@@ -17,6 +17,8 @@ class Shift extends Model
         'end_time',
         'crosses_midnight',
         'lunch_required',
+        'lunch_start_time',
+        'lunch_end_time',
         'lunch_duration_minutes',
         'tolerance_minutes',
         'overtime_enabled',

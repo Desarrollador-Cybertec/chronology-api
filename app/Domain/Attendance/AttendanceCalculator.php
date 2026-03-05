@@ -9,7 +9,8 @@ use Illuminate\Support\Collection;
 class AttendanceCalculator
 {
     public function __construct(
-        private AttendanceDayBuilder $dayBuilder,
+        private LunchAnalyzer $lunchAnalyzer,
+        private WorkTimeCalculator $workTimeCalculator,
         private LateCalculator $lateCalculator,
         private OvertimeCalculator $overtimeCalculator,
     ) {}
@@ -17,7 +18,7 @@ class AttendanceCalculator
     /**
      * Calculate attendance metrics from pre-reduced logs.
      *
-     * Coordinates AttendanceDayBuilder, LateCalculator, and OvertimeCalculator.
+     * Pipeline: LunchAnalyzer → WorkTimeCalculator → LateCalculator → OvertimeCalculator
      *
      * @param  Collection  $reducedLogs  Noise-filtered RawLog entries
      * @param  Shift|null  $shift  Resolved shift for the employee
@@ -32,7 +33,13 @@ class AttendanceCalculator
         string $diurnalStartTime = '06:00',
         string $nocturnalStartTime = '20:00',
     ): AttendanceResult {
-        $result = $this->dayBuilder->build($reducedLogs, $shift);
+
+    $lunchMinutes = 0;
+        if ($shift) {
+            $lunchMinutes = $this->lunchAnalyzer->analyze($reducedLogs, $shift, $dateReference);
+        }
+
+        $result = $this->workTimeCalculator->calculate($reducedLogs, $shift, $lunchMinutes);
         $result = $this->lateCalculator->calculate($result, $dateReference);
         $result = $this->overtimeCalculator->calculate($result, $dateReference, $diurnalStartTime, $nocturnalStartTime);
 

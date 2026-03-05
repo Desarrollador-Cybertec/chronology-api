@@ -19,6 +19,8 @@ class ShiftResource extends JsonResource
             'end_time' => $this->end_time,
             'crosses_midnight' => $this->crosses_midnight,
             'lunch_required' => $this->lunch_required,
+            'lunch_start_time' => $this->lunch_start_time,
+            'lunch_end_time' => $this->lunch_end_time,
             'lunch_duration_minutes' => $this->lunch_duration_minutes,
             'tolerance_minutes' => $this->tolerance_minutes,
             'overtime_enabled' => $this->overtime_enabled,

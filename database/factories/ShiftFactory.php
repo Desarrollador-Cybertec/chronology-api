@@ -45,6 +45,8 @@ class ShiftFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'lunch_required' => true,
+            'lunch_start_time' => '12:00',
+            'lunch_end_time' => '13:00',
             'lunch_duration_minutes' => 60,
         ]);
     }

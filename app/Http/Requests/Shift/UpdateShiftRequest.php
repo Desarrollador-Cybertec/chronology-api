@@ -22,6 +22,8 @@ class UpdateShiftRequest extends FormRequest
             'end_time' => ['sometimes', 'date_format:H:i'],
             'crosses_midnight' => ['sometimes', 'boolean'],
             'lunch_required' => ['sometimes', 'boolean'],
+            'lunch_start_time' => ['sometimes', 'nullable', 'date_format:H:i'],
+            'lunch_end_time' => ['sometimes', 'nullable', 'date_format:H:i'],
             'lunch_duration_minutes' => ['sometimes', 'integer', 'min:0', 'max:120'],
             'tolerance_minutes' => ['sometimes', 'integer', 'min:0', 'max:60'],
             'overtime_enabled' => ['sometimes', 'boolean'],

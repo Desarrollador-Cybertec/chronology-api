@@ -31,34 +31,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Shifts
-        Shift::factory()->count(3)->sequence(
-            [
-                'name' => 'Matutino',
-                'start_time' => '06:00',
-                'end_time' => '14:00',
-                'tolerance_minutes' => 10,
-                'lunch_required' => true,
-                'lunch_duration_minutes' => 60,
-            ],
-            [
-                'name' => 'Vespertino',
-                'start_time' => '14:00',
-                'end_time' => '22:00',
-                'tolerance_minutes' => 10,
-                'lunch_required' => true,
-                'lunch_duration_minutes' => 60,
-            ],
-            [
-                'name' => 'Nocturno',
-                'start_time' => '22:00',
-                'end_time' => '06:00',
-                'crosses_midnight' => true,
-                'tolerance_minutes' => 10,
-                'overtime_enabled' => true,
-                'overtime_min_block_minutes' => 60,
-                'max_daily_overtime_minutes' => 240,
-            ],
-        )->create();
+        Shift::factory()->create([
+            'name' => 'Jornada Completa',
+            'start_time' => '07:00',
+            'end_time' => '17:00',
+            'tolerance_minutes' => 10,
+            'lunch_required' => true,
+            'lunch_start_time' => '14:00',
+            'lunch_end_time' => '14:30',
+            'lunch_duration_minutes' => 30,
+        ]);
 
         // System settings
         $settings = [
