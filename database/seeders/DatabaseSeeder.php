@@ -37,9 +37,9 @@ class DatabaseSeeder extends Seeder
             'end_time' => '17:00',
             'tolerance_minutes' => 10,
             'lunch_required' => true,
-            'lunch_start_time' => '14:00',
-            'lunch_end_time' => '14:30',
-            'lunch_duration_minutes' => 30,
+            'lunch_start_time' => '12:00',
+            'lunch_end_time' => '13:00',
+            'lunch_duration_minutes' => 60,
         ]);
 
         // System settings
@@ -48,7 +48,8 @@ class DatabaseSeeder extends Seeder
             ['key' => 'diurnal_start_time', 'value' => '06:00', 'group' => 'attendance'],
             ['key' => 'nocturnal_start_time', 'value' => '20:00', 'group' => 'attendance'],
             ['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance'],
-            ['key' => 'auto_assign_tolerance_minutes', 'value' => '30', 'group' => 'attendance'],
+            ['key' => 'auto_assign_tolerance_minutes', 'value' => '60', 'group' => 'attendance'],
+            ['key' => 'lunch_margin_minutes', 'value' => '15', 'group' => 'attendance'],
             ['key' => 'data_retention_months', 'value' => '24', 'group' => 'general'],
         ];
 

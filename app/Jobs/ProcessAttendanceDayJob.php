@@ -38,6 +38,7 @@ class ProcessAttendanceDayJob implements ShouldQueue
         $autoAssignTolerance = (int) SystemSetting::getValue('auto_assign_tolerance_minutes', '30');
         $diurnalStart = SystemSetting::getValue('diurnal_start_time', '06:00');
         $nocturnalStart = SystemSetting::getValue('nocturnal_start_time', '20:00');
+        $lunchMargin = (int) SystemSetting::getValue('lunch_margin_minutes', '15');
 
         $result = $engine->process(
             $rawLogs,
@@ -48,6 +49,7 @@ class ProcessAttendanceDayJob implements ShouldQueue
             $autoAssignTolerance,
             $diurnalStart,
             $nocturnalStart,
+            $lunchMargin,
         );
 
         AttendanceDay::updateOrCreate(

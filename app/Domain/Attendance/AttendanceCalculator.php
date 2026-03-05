@@ -32,11 +32,12 @@ class AttendanceCalculator
         Carbon $dateReference,
         string $diurnalStartTime = '06:00',
         string $nocturnalStartTime = '20:00',
+        int $lunchMarginMinutes = 15,
     ): AttendanceResult {
 
-    $lunchMinutes = 0;
+        $lunchMinutes = 0;
         if ($shift) {
-            $lunchMinutes = $this->lunchAnalyzer->analyze($reducedLogs, $shift, $dateReference);
+            $lunchMinutes = $this->lunchAnalyzer->analyze($reducedLogs, $shift, $dateReference, $lunchMarginMinutes);
         }
 
         $result = $this->workTimeCalculator->calculate($reducedLogs, $shift, $lunchMinutes);

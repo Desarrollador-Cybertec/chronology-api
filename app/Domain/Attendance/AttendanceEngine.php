@@ -28,6 +28,7 @@ class AttendanceEngine
      * @param  int  $autoAssignToleranceMinutes  Tolerance window for auto-assignment matching
      * @param  string  $diurnalStartTime  Start of diurnal period
      * @param  string  $nocturnalStartTime  Start of nocturnal period
+     * @param  int  $lunchMarginMinutes  Margin for detecting lunch punches
      */
     public function process(
         Collection $rawLogs,
@@ -38,6 +39,7 @@ class AttendanceEngine
         int $autoAssignToleranceMinutes = 30,
         string $diurnalStartTime = '06:00',
         string $nocturnalStartTime = '20:00',
+        int $lunchMarginMinutes = 15,
     ): AttendanceResult {
         $schedule = $this->scheduleResolver->resolve($employeeId, $dateReference);
 
@@ -58,6 +60,6 @@ class AttendanceEngine
             );
         }
 
-        return $this->calculator->calculate($reducedLogs, $shift, $dateReference, $diurnalStartTime, $nocturnalStartTime);
+        return $this->calculator->calculate($reducedLogs, $shift, $dateReference, $diurnalStartTime, $nocturnalStartTime, $lunchMarginMinutes);
     }
 }

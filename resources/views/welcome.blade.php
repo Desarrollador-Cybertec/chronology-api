@@ -580,6 +580,24 @@
 
         <div class="sidebar-section">
 
+            <div class="sidebar-section-label">Excepciones Horario</div>
+
+            <a href="#ep-exc-index"><span class="method-dot" style="background:var(--get)"></span> Listar por empleado</a>
+
+            <a href="#ep-exc-show"><span class="method-dot" style="background:var(--get)"></span> Ver</a>
+
+            <a href="#ep-exc-store"><span class="method-dot" style="background:var(--post)"></span> Crear / Upsert</a>
+
+            <a href="#ep-exc-batch"><span class="method-dot" style="background:var(--post)"></span> Batch</a>
+
+            <a href="#ep-exc-destroy"><span class="method-dot" style="background:var(--delete)"></span> Eliminar</a>
+
+        </div>
+
+
+
+        <div class="sidebar-section">
+
             <div class="sidebar-section-label">Asistencia</div>
 
             <a href="#ep-attendance-index"><span class="method-dot" style="background:var(--get)"></span> Listar</a>
@@ -1124,6 +1142,10 @@
 
   <span class="key">"lunch_required"</span>:             <span class="boo">true</span>,
 
+  <span class="key">"lunch_start_time"</span>:           <span class="str">"12:00"</span>,
+
+  <span class="key">"lunch_end_time"</span>:             <span class="str">"13:00"</span>,
+
   <span class="key">"lunch_duration_minutes"</span>:     <span class="num">60</span>,
 
   <span class="key">"tolerance_minutes"</span>:          <span class="num">5</span>,
@@ -1207,6 +1229,10 @@
   <span class="key">"crosses_midnight"</span>:           <span class="boo">true</span>,              <span class="cmt">// opcional</span>
 
   <span class="key">"lunch_required"</span>:             <span class="boo">false</span>,             <span class="cmt">// opcional</span>
+
+  <span class="key">"lunch_start_time"</span>:           <span class="str">"12:00"</span>,           <span class="cmt">// opcional, HH:mm</span>
+
+  <span class="key">"lunch_end_time"</span>:             <span class="str">"13:00"</span>,           <span class="cmt">// opcional, HH:mm</span>
 
   <span class="key">"lunch_duration_minutes"</span>:     <span class="num">0</span>,                 <span class="cmt">// opcional, 0–120</span>
 
@@ -1314,7 +1340,7 @@
 
                 <span>ℹ️</span>
 
-                <span>Una asignación vincula un empleado con un turno durante un rango de fechas. El motor de asistencia la usa para calcular tardanzas y horas extra.</span>
+                <span>Una asignación vincula un empleado con un turno durante un rango de fechas. El campo <code>work_days</code> define qué días de la semana trabaja (0=Domingo … 6=Sábado). El motor de asistencia la usa para determinar días laborales, calcular tardanzas y horas extra.</span>
 
             </div>
 
@@ -1355,6 +1381,8 @@
   <span class="key">"effective_date"</span>: <span class="str">"2026-01-01"</span>,
 
   <span class="key">"end_date"</span>:       <span class="kw">null</span>,
+
+  <span class="key">"work_days"</span>:      <span class="kw">[</span><span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span><span class="kw">]</span>,
 
   <span class="key">"employee"</span>:       <span class="kw">{...}</span>,
 
@@ -1428,7 +1456,9 @@
 
   <span class="key">"effective_date"</span>: <span class="str">"2026-01-01"</span>,   <span class="cmt">// requerido, fecha de inicio</span>
 
-  <span class="key">"end_date"</span>:       <span class="str">"2026-12-31"</span>    <span class="cmt">// opcional, null = indefinido</span>
+  <span class="key">"end_date"</span>:       <span class="str">"2026-12-31"</span>,   <span class="cmt">// opcional, null = indefinido</span>
+
+  <span class="key">"work_days"</span>:      <span class="kw">[</span><span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span><span class="kw">]</span>       <span class="cmt">// opcional, 0=Dom…6=Sáb (default: Lun-Vie)</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -1468,9 +1498,11 @@
 
                     <div class="code-block"><pre><span class="kw">{</span>
 
-  <span class="key">"shift_id"</span>: <span class="num">3</span>,
+  <span class="key">"shift_id"</span>:  <span class="num">3</span>,
 
-  <span class="key">"end_date"</span>: <span class="str">"2026-06-30"</span>
+  <span class="key">"end_date"</span>:  <span class="str">"2026-06-30"</span>,
+
+  <span class="key">"work_days"</span>: <span class="kw">[</span><span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span><span class="kw">]</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -1505,6 +1537,340 @@
                     <div class="block-label">Respuesta 200</div>
 
                     <div class="code-block"><pre><span class="kw">{</span> <span class="key">"message"</span>: <span class="str">"Asignación eliminada correctamente."</span> <span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ═══════════════ EXCEPCIONES DE HORARIO ══════════════ -->
+
+        <div class="section" id="excepciones">
+
+            <div class="section-title">Excepciones de Horario</div>
+
+            <div class="alert alert-info" style="margin-bottom:20px">
+
+                <span>ℹ️</span>
+
+                <span>Las excepciones de horario permiten marcar un día específico como laborable o de descanso para un empleado, sin importar su asignación de turno habitual. Ejemplos: un sábado extra de trabajo, un permiso especial, un feriado individual. Si la excepción marca el día como laborable, puede incluir un turno alternativo.</span>
+
+            </div>
+
+
+
+            <!-- GET /employees/{employee}/schedule-exceptions -->
+
+            <div class="endpoint" id="ep-exc-index">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/employees/{employee}/schedule-exceptions</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Lista las excepciones de horario de un empleado, ordenadas por fecha descendente. Incluye turno si aplica.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Query params opcionales</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Param</th><th>Tipo</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">per_page</td><td class="param-type">integer</td><td class="param-desc">Resultados por página (default: 15, max: 100)</td></tr>
+
+                            <tr><td class="param-name">page</td><td class="param-type">integer</td><td class="param-desc">Número de página</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="block-label">Respuesta 200 — estructura de una excepción</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"data"</span>: <span class="kw">[{</span>
+
+    <span class="key">"id"</span>:             <span class="num">1</span>,
+
+    <span class="key">"employee_id"</span>:    <span class="num">5</span>,
+
+    <span class="key">"date"</span>:           <span class="str">"2026-02-14"</span>,
+
+    <span class="key">"shift_id"</span>:       <span class="kw">null</span>,
+
+    <span class="key">"is_working_day"</span>: <span class="boo">false</span>,
+
+    <span class="key">"reason"</span>:         <span class="str">"Permiso personal"</span>,
+
+    <span class="key">"shift"</span>:          <span class="kw">null</span>
+
+  <span class="kw">}]</span>,
+
+  <span class="key">"links"</span>: <span class="kw">{...}</span>,
+
+  <span class="key">"meta"</span>:  <span class="kw">{</span> <span class="key">"current_page"</span>: <span class="num">1</span>, <span class="key">"total"</span>: <span class="num">3</span>, <span class="key">"per_page"</span>: <span class="num">15</span> <span class="kw">}</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- GET /schedule-exceptions/{id} -->
+
+            <div class="endpoint" id="ep-exc-show">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-get">GET</span>
+
+                    <span class="endpoint-path">/api/schedule-exceptions/{id}</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Devuelve una excepción de horario con su empleado y turno anidados.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"data"</span>: <span class="kw">{</span>
+
+    <span class="key">"id"</span>:             <span class="num">1</span>,
+
+    <span class="key">"employee_id"</span>:    <span class="num">5</span>,
+
+    <span class="key">"date"</span>:           <span class="str">"2026-02-14"</span>,
+
+    <span class="key">"shift_id"</span>:       <span class="num">2</span>,
+
+    <span class="key">"is_working_day"</span>: <span class="boo">true</span>,
+
+    <span class="key">"reason"</span>:         <span class="str">"Sábado extra de trabajo"</span>,
+
+    <span class="key">"shift"</span>:          <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">2</span>, <span class="key">"name"</span>: <span class="str">"Diurno"</span>, <span class="key">"..."</span> <span class="kw">}</span>,
+
+    <span class="key">"employee"</span>:       <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">5</span>, <span class="key">"first_name"</span>: <span class="str">"JUAN"</span>, <span class="key">"..."</span> <span class="kw">}</span>
+
+  <span class="kw">}</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- POST /schedule-exceptions -->
+
+            <div class="endpoint" id="ep-exc-store">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-post">POST</span>
+
+                    <span class="endpoint-path">/api/schedule-exceptions</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Crea o actualiza una excepción de horario. Si ya existe una excepción para el mismo empleado y fecha, se actualiza (upsert).</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Body (JSON)</div>
+
+                    <table class="params-table">
+
+                        <thead><tr><th>Campo</th><th>Tipo</th><th>Regla</th><th>Descripción</th></tr></thead>
+
+                        <tbody>
+
+                            <tr><td class="param-name">employee_id</td><td class="param-type">integer</td><td class="param-req">requerido</td><td class="param-desc">ID del empleado (debe existir)</td></tr>
+
+                            <tr><td class="param-name">date</td><td class="param-type">date</td><td class="param-req">requerido</td><td class="param-desc">Fecha de la excepción (<code>2026-02-14</code>)</td></tr>
+
+                            <tr><td class="param-name">shift_id</td><td class="param-type">integer</td><td class="param-opt">opcional</td><td class="param-desc">Turno alternativo (debe existir). Solo si <code>is_working_day = true</code></td></tr>
+
+                            <tr><td class="param-name">is_working_day</td><td class="param-type">boolean</td><td class="param-opt">opcional</td><td class="param-desc">¿Es día laborable? (default: <code>true</code>)</td></tr>
+
+                            <tr><td class="param-name">reason</td><td class="param-type">string</td><td class="param-opt">opcional</td><td class="param-desc">Motivo de la excepción (max 500 caracteres)</td></tr>
+
+                        </tbody>
+
+                    </table>
+
+                    <div class="block-label">Ejemplo — marcar día de descanso</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"employee_id"</span>:    <span class="num">5</span>,
+
+  <span class="key">"date"</span>:           <span class="str">"2026-02-14"</span>,
+
+  <span class="key">"is_working_day"</span>: <span class="boo">false</span>,
+
+  <span class="key">"reason"</span>:         <span class="str">"Permiso personal aprobado"</span>
+
+<span class="kw">}</span></pre></div>
+
+                    <div class="block-label">Ejemplo — sábado de trabajo con turno específico</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"employee_id"</span>:    <span class="num">5</span>,
+
+  <span class="key">"date"</span>:           <span class="str">"2026-02-15"</span>,
+
+  <span class="key">"shift_id"</span>:       <span class="num">2</span>,
+
+  <span class="key">"is_working_day"</span>: <span class="boo">true</span>,
+
+  <span class="key">"reason"</span>:         <span class="str">"Sábado extra por proyecto urgente"</span>
+
+<span class="kw">}</span></pre></div>
+
+                    <div class="block-label">Respuesta 201</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span> <span class="key">"data"</span>: <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"employee_id"</span>: <span class="num">5</span>, <span class="key">"date"</span>: <span class="str">"2026-02-14"</span>, <span class="key">"..."</span> <span class="kw">} }</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- POST /schedule-exceptions/batch -->
+
+            <div class="endpoint" id="ep-exc-batch">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-post">POST</span>
+
+                    <span class="endpoint-path">/api/schedule-exceptions/batch</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Crea o actualiza múltiples excepciones de horario en una sola petición (upsert por empleado+fecha).</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Body (JSON)</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"exceptions"</span>: <span class="kw">[</span>
+
+    <span class="kw">{</span>
+
+      <span class="key">"employee_id"</span>:    <span class="num">5</span>,
+
+      <span class="key">"date"</span>:           <span class="str">"2026-02-14"</span>,
+
+      <span class="key">"is_working_day"</span>: <span class="boo">false</span>,
+
+      <span class="key">"reason"</span>:         <span class="str">"Feriado empresa"</span>
+
+    <span class="kw">}</span>,
+
+    <span class="kw">{</span>
+
+      <span class="key">"employee_id"</span>:    <span class="num">8</span>,
+
+      <span class="key">"date"</span>:           <span class="str">"2026-02-14"</span>,
+
+      <span class="key">"is_working_day"</span>: <span class="boo">false</span>,
+
+      <span class="key">"reason"</span>:         <span class="str">"Feriado empresa"</span>
+
+    <span class="kw">}</span>
+
+  <span class="kw">]</span>
+
+<span class="kw">}</span></pre></div>
+
+                    <div class="block-label">Respuesta 201</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span>
+
+  <span class="key">"message"</span>: <span class="str">"Excepciones de horario procesadas correctamente."</span>,
+
+  <span class="key">"count"</span>:   <span class="num">2</span>,
+
+  <span class="key">"data"</span>:    <span class="kw">[{</span> <span class="key">"id"</span>: <span class="num">1</span>, <span class="key">"..."</span> <span class="kw">}, {</span> <span class="key">"id"</span>: <span class="num">2</span>, <span class="key">"..."</span> <span class="kw">}]</span>
+
+<span class="kw">}</span></pre></div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- DELETE /schedule-exceptions/{id} -->
+
+            <div class="endpoint" id="ep-exc-destroy">
+
+                <div class="endpoint-header" onclick="toggle(this)">
+
+                    <span class="method-badge method-delete">DELETE</span>
+
+                    <span class="endpoint-path">/api/schedule-exceptions/{id}</span>
+
+                    <span class="role-badge role-manager">manager+</span>
+
+                </div>
+
+                <div class="endpoint-body">
+
+                    <p class="endpoint-desc">Elimina una excepción de horario. No requiere body.</p>
+
+                    <div class="block-label">Headers</div>
+
+                    <div class="header-example">Authorization: Bearer <span style="color:#a78bfa">{token}</span></div>
+
+                    <div class="block-label">Respuesta 200</div>
+
+                    <div class="code-block"><pre><span class="kw">{</span> <span class="key">"message"</span>: <span class="str">"Excepción de horario eliminada correctamente."</span> <span class="kw">}</span></pre></div>
 
                 </div>
 
@@ -2034,7 +2400,9 @@
 
                                 <tr><td style="padding:4px 8px"><code>auto_assign_shift</code></td><td style="padding:4px 8px"><code>true</code></td><td style="padding:4px 8px">Habilitar auto-asignación de turno si el empleado no tiene uno</td></tr>
 
-                                <tr><td style="padding:4px 8px"><code>auto_assign_tolerance_minutes</code></td><td style="padding:4px 8px"><code>30</code></td><td style="padding:4px 8px">Ventana (±min) alrededor del inicio de turno para considerar match</td></tr>
+                                <tr><td style="padding:4px 8px"><code>auto_assign_tolerance_minutes</code></td><td style="padding:4px 8px"><code>60</code></td><td style="padding:4px 8px">Ventana (±min) alrededor del inicio de turno para considerar match</td></tr>
+
+                                <tr><td style="padding:4px 8px"><code>lunch_margin_minutes</code></td><td style="padding:4px 8px"><code>15</code></td><td style="padding:4px 8px">Margen (min) para detectar marcajes de almuerzo</td></tr>
 
                             </tbody>
 
@@ -2373,7 +2741,121 @@ Content-Type: multipart/form-data</div>
 
                 <span>🔒</span>
 
-                <span>Solo accesible para <strong>superadmin</strong>. Controla parámetros del motor de asistencia: ventana de ruido, inicio de jornada diurna/nocturna, etc.</span>
+                <span>Solo accesible para <strong>superadmin</strong>. Controla todos los parámetros del motor de asistencia: ventana de ruido, detección de almuerzo, auto-asignación de turno, clasificación de horas extra, y más.</span>
+
+            </div>
+
+
+
+            <!-- Referencia de settings -->
+
+            <div style="background:#111827; border:1px solid #374151; border-radius:10px; padding:20px 24px; margin-bottom:24px">
+
+                <div style="font-size:1rem; font-weight:700; color:#f3f4f6; margin-bottom:14px">📋 Referencia completa de configuraciones</div>
+
+                <table class="params-table" style="font-size:0.8rem">
+
+                    <thead><tr>
+
+                        <th>Key</th>
+
+                        <th>Default</th>
+
+                        <th>Grupo</th>
+
+                        <th>Descripción</th>
+
+                    </tr></thead>
+
+                    <tbody>
+
+                        <tr>
+
+                            <td class="param-name">noise_window_minutes</td>
+
+                            <td class="param-type"><code>60</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Ventana en minutos para filtrar marcajes duplicados del biométrico. Si dos marcajes están dentro de esta ventana, solo se conserva el primero. Evita que registros repetidos generen eventos falsos (ej: doble marcaje al pasar por el lector).</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">auto_assign_shift</td>
+
+                            <td class="param-type"><code>true</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Habilitar la auto-asignación de turno. Si un empleado no tiene turno asignado, el sistema intenta asociarle un turno activo comparando su hora de entrada con el <code>start_time</code> de cada turno. Si está en <code>false</code>, los empleados sin turno se procesan sin cálculos de tardanza/horas extra.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">auto_assign_tolerance_minutes</td>
+
+                            <td class="param-type"><code>60</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Ventana (± minutos) alrededor del inicio de turno para considerar match en la auto-asignación. Ej: con turno a las 07:00 y tolerancia 60, empleados que entren entre 06:00 y 08:00 serán asociados a ese turno.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">lunch_margin_minutes</td>
+
+                            <td class="param-type"><code>15</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Margen en minutos para detectar marcajes de almuerzo. El motor busca un par de marcajes intermedios (salida/regreso) cerca de la ventana <code>lunch_start_time</code>/<code>lunch_end_time</code> del turno. Este margen amplía la detección: salida se busca en ± margen alrededor de <code>lunch_start_time</code>, regreso entre <code>lunch_start_time + margen</code> y <code>lunch_end_time + 2× margen</code>.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">diurnal_start_time</td>
+
+                            <td class="param-type"><code>06:00</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Hora de inicio del período diurno (formato <code>HH:mm</code>). Las horas extra trabajadas entre esta hora y <code>nocturnal_start_time</code> se clasifican como <strong>diurnas</strong>.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">nocturnal_start_time</td>
+
+                            <td class="param-type"><code>20:00</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Hora de inicio del período nocturno (formato <code>HH:mm</code>). Las horas extra trabajadas desde esta hora hasta <code>diurnal_start_time</code> del día siguiente se clasifican como <strong>nocturnas</strong>. Útil para el cálculo de recargos nocturnos.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">data_retention_months</td>
+
+                            <td class="param-type"><code>24</code></td>
+
+                            <td class="param-type">general</td>
+
+                            <td class="param-desc">Meses de retención de datos históricos. Registros más antiguos podrán ser purgados automáticamente.</td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
 
             </div>
 
@@ -2407,15 +2889,19 @@ Content-Type: multipart/form-data</div>
 
   <span class="key">"data"</span>: <span class="kw">[</span>
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"diurnal_start_time"</span>,   <span class="key">"value"</span>: <span class="str">"06:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,          <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"nocturnal_start_time"</span>, <span class="key">"value"</span>: <span class="str">"20:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_shift"</span>,              <span class="key">"value"</span>: <span class="str">"true"</span>,  <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,  <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_tolerance_minutes"</span>,   <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_shift"</span>,    <span class="key">"value"</span>: <span class="str">"true"</span>,  <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"lunch_margin_minutes"</span>,            <span class="key">"value"</span>: <span class="str">"15"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_tolerance_minutes"</span>, <span class="key">"value"</span>: <span class="str">"30"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"diurnal_start_time"</span>,             <span class="key">"value"</span>: <span class="str">"06:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"nocturnal_start_time"</span>,           <span class="key">"value"</span>: <span class="str">"20:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"data_retention_months"</span>,           <span class="key">"value"</span>: <span class="str">"24"</span>,    <span class="key">"group"</span>: <span class="str">"general"</span>    <span class="kw">}</span>
 
   <span class="kw">]</span>
 
@@ -2457,6 +2943,8 @@ Content-Type: multipart/form-data</div>
 
     <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,  <span class="key">"value"</span>: <span class="str">"45"</span>    <span class="kw">}</span>,
 
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"lunch_margin_minutes"</span>,  <span class="key">"value"</span>: <span class="str">"20"</span>    <span class="kw">}</span>,
+
     <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"diurnal_start_time"</span>,   <span class="key">"value"</span>: <span class="str">"07:00"</span> <span class="kw">}</span>
 
   <span class="kw">]</span>
@@ -2469,7 +2957,7 @@ Content-Type: multipart/form-data</div>
 
   <span class="key">"message"</span>:      <span class="str">"Configuración actualizada correctamente."</span>,
 
-  <span class="key">"updated_keys"</span>: <span class="kw">[</span><span class="str">"noise_window_minutes"</span>, <span class="str">"diurnal_start_time"</span><span class="kw">]</span>
+  <span class="key">"updated_keys"</span>: <span class="kw">[</span><span class="str">"noise_window_minutes"</span>, <span class="str">"lunch_margin_minutes"</span>, <span class="str">"diurnal_start_time"</span><span class="kw">]</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -2556,4 +3044,3 @@ Content-Type: multipart/form-data</div>
 </body>
 
 </html>
-

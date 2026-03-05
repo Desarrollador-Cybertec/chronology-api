@@ -20,7 +20,7 @@ class LunchAnalyzer
      * @param  Carbon  $dateReference  The date being processed
      * @return int Minutes to deduct for lunch
      */
-    public function analyze(Collection $reducedLogs, Shift $shift, Carbon $dateReference): int
+    public function analyze(Collection $reducedLogs, Shift $shift, Carbon $dateReference, int $lunchMarginMinutes = 15): int
     {
         if (! $shift->lunch_required) {
             return 0;
@@ -31,7 +31,7 @@ class LunchAnalyzer
         }
 
         if ($shift->lunch_start_time && $shift->lunch_end_time) {
-            return $this->analyzeWithLunchWindow($reducedLogs, $shift, $dateReference);
+            return $this->analyzeWithLunchWindow($reducedLogs, $shift, $dateReference, $lunchMarginMinutes);
         }
 
         return $shift->lunch_duration_minutes ?? 0;
@@ -45,7 +45,7 @@ class LunchAnalyzer
      * the actual break duration. Otherwise falls back to the configured
      * lunch_duration_minutes.
      */
-    private function analyzeWithLunchWindow(Collection $reducedLogs, Shift $shift, Carbon $dateReference): int
+    private function analyzeWithLunchWindow(Collection $reducedLogs, Shift $shift, Carbon $dateReference, int $lunchMarginMinutes = 15): int
     {
         $lunchStart = $dateReference->copy()->setTimeFromTimeString($shift->lunch_start_time);
         $lunchEnd = $dateReference->copy()->setTimeFromTimeString($shift->lunch_end_time);
@@ -70,13 +70,13 @@ class LunchAnalyzer
             for ($i = 1; $i < $sorted->count() - 1; $i++) {
                 $punchTime = $sorted[$i]->check_time;
 
-                if (! $lunchExit && $this->isNearLunchStart($punchTime, $lunchStart)) {
+                if (! $lunchExit && $this->isNearLunchStart($punchTime, $lunchStart, $lunchMarginMinutes)) {
                     $lunchExit = $punchTime;
 
                     continue;
                 }
 
-                if ($lunchExit && ! $lunchReturn && $this->isNearLunchEnd($punchTime, $lunchStart, $lunchEnd)) {
+                if ($lunchExit && ! $lunchReturn && $this->isNearLunchEnd($punchTime, $lunchStart, $lunchEnd, $lunchMarginMinutes)) {
                     $lunchReturn = $punchTime;
 
                     break;
@@ -92,23 +92,23 @@ class LunchAnalyzer
     }
 
     /**
-     * Check if a punch time is near the lunch start (within 15 min margin).
+     * Check if a punch time is near the lunch start (within margin).
      */
-    private function isNearLunchStart(Carbon $punchTime, Carbon $lunchStart): bool
+    private function isNearLunchStart(Carbon $punchTime, Carbon $lunchStart, int $marginMinutes = 15): bool
     {
-        $windowStart = $lunchStart->copy()->subMinutes(15);
-        $windowEnd = $lunchStart->copy()->addMinutes(15);
+        $windowStart = $lunchStart->copy()->subMinutes($marginMinutes);
+        $windowEnd = $lunchStart->copy()->addMinutes($marginMinutes);
 
         return $punchTime->between($windowStart, $windowEnd);
     }
 
     /**
-     * Check if a punch time is near the lunch end (between lunch_start + 15min and lunch_end + 30min).
+     * Check if a punch time is near the lunch end (between lunch_start + margin and lunch_end + 2*margin).
      */
-    private function isNearLunchEnd(Carbon $punchTime, Carbon $lunchStart, Carbon $lunchEnd): bool
+    private function isNearLunchEnd(Carbon $punchTime, Carbon $lunchStart, Carbon $lunchEnd, int $marginMinutes = 15): bool
     {
-        $windowStart = $lunchStart->copy()->addMinutes(15);
-        $windowEnd = $lunchEnd->copy()->addMinutes(30);
+        $windowStart = $lunchStart->copy()->addMinutes($marginMinutes);
+        $windowEnd = $lunchEnd->copy()->addMinutes($marginMinutes * 2);
 
         return $punchTime->between($windowStart, $windowEnd);
     }
