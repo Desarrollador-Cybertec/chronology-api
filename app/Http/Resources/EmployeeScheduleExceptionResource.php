@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class EmployeeShiftAssignmentResource extends JsonResource
+class EmployeeScheduleExceptionResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -15,10 +15,10 @@ class EmployeeShiftAssignmentResource extends JsonResource
         return [
             'id' => $this->id,
             'employee_id' => $this->employee_id,
+            'date' => $this->date?->toDateString(),
             'shift_id' => $this->shift_id,
-            'effective_date' => $this->effective_date?->toDateString(),
-            'end_date' => $this->end_date?->toDateString(),
-            'work_days' => $this->work_days,
+            'is_working_day' => $this->is_working_day,
+            'reason' => $this->reason,
             'shift' => new ShiftResource($this->whenLoaded('shift')),
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'created_at' => $this->created_at,

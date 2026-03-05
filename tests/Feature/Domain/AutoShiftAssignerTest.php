@@ -9,6 +9,7 @@ use App\Domain\Attendance\LateCalculator;
 use App\Domain\Attendance\LogReducer;
 use App\Domain\Attendance\LunchAnalyzer;
 use App\Domain\Attendance\OvertimeCalculator;
+use App\Domain\Attendance\ScheduleResolver;
 use App\Domain\Attendance\ShiftResolver;
 use App\Domain\Attendance\WorkTimeCalculator;
 use App\Jobs\ProcessAttendanceDayJob;
@@ -39,6 +40,7 @@ class AutoShiftAssignerTest extends TestCase
 
         $this->engine = new AttendanceEngine(
             new LogReducer,
+            new ScheduleResolver,
             new ShiftResolver,
             new AttendanceCalculator(
                 new LunchAnalyzer,

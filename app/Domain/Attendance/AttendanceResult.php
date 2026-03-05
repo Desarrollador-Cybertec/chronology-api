@@ -19,4 +19,9 @@ class AttendanceResult
         public string $status = 'absent',
         public ?Shift $shift = null,
     ) {}
+
+    public static function rest(): self
+    {
+        return new self(status: 'rest');
+    }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeScheduleExceptionController;
 use App\Http\Controllers\EmployeeShiftController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\ShiftController;
@@ -40,6 +41,13 @@ Route::middleware('auth:sanctum')->group(function () {
         // Employee shift assignments (read)
         Route::get('/employees/{employee}/shifts', [EmployeeShiftController::class, 'index']);
         Route::get('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'show']);
+
+        // Schedule exceptions (read + write for managers)
+        Route::get('/employees/{employee}/schedule-exceptions', [EmployeeScheduleExceptionController::class, 'index']);
+        Route::get('/schedule-exceptions/{scheduleException}', [EmployeeScheduleExceptionController::class, 'show']);
+        Route::post('/schedule-exceptions', [EmployeeScheduleExceptionController::class, 'store']);
+        Route::post('/schedule-exceptions/batch', [EmployeeScheduleExceptionController::class, 'batch']);
+        Route::delete('/schedule-exceptions/{scheduleException}', [EmployeeScheduleExceptionController::class, 'destroy']);
     });
 
     /*

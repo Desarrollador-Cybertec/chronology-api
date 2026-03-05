@@ -9,6 +9,7 @@ class AttendanceEngine
 {
     public function __construct(
         private LogReducer $logReducer,
+        private ScheduleResolver $scheduleResolver,
         private ShiftResolver $shiftResolver,
         private AttendanceCalculator $calculator,
         private AutoShiftAssigner $autoShiftAssigner,
@@ -17,8 +18,7 @@ class AttendanceEngine
     /**
      * Process attendance for an employee on a given date.
      *
-     * Pipeline: LogReducer → ShiftResolver (→ AutoShiftAssigner) → AttendanceCalculator
-     * (which internally runs: AttendanceDayBuilder → LateCalculator → OvertimeCalculator)
+     * Pipeline: ScheduleResolver → LogReducer → ShiftResolver (→ AutoShiftAssigner) → AttendanceCalculator
      *
      * @param  Collection  $rawLogs  RawLog entries for this employee+date
      * @param  int  $employeeId  The employee being processed
@@ -39,9 +39,15 @@ class AttendanceEngine
         string $diurnalStartTime = '06:00',
         string $nocturnalStartTime = '20:00',
     ): AttendanceResult {
+        $schedule = $this->scheduleResolver->resolve($employeeId, $dateReference);
+
+        if (! $schedule->isWorkingDay) {
+            return AttendanceResult::rest();
+        }
+
         $reducedLogs = $this->logReducer->reduce($rawLogs, $noiseWindowMinutes);
 
-        $shift = $this->shiftResolver->resolve($employeeId, $dateReference);
+        $shift = $schedule->shift ?? $this->shiftResolver->resolve($employeeId, $dateReference);
 
         if (! $shift && $autoAssignShift && $reducedLogs->isNotEmpty()) {
             $firstCheckIn = $reducedLogs->sortBy('check_time')->first()->check_time;

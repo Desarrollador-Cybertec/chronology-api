@@ -5,6 +5,7 @@ namespace Tests\Feature\Models;
 use App\Models\AttendanceDay;
 use App\Models\AttendanceEdit;
 use App\Models\Employee;
+use App\Models\EmployeeScheduleException;
 use App\Models\EmployeeShiftAssignment;
 use App\Models\ImportBatch;
 use App\Models\RawLog;
@@ -196,5 +197,30 @@ class ModelRelationshipTest extends TestCase
 
         $this->assertTrue($manager->isManager());
         $this->assertFalse($manager->isSuperAdmin());
+    }
+
+    public function test_employee_has_schedule_exceptions(): void
+    {
+        $employee = Employee::factory()->create();
+
+        EmployeeScheduleException::factory()->count(2)->create([
+            'employee_id' => $employee->id,
+        ]);
+
+        $this->assertCount(2, $employee->scheduleExceptions);
+    }
+
+    public function test_schedule_exception_belongs_to_employee(): void
+    {
+        $exception = EmployeeScheduleException::factory()->create();
+
+        $this->assertInstanceOf(Employee::class, $exception->employee);
+    }
+
+    public function test_schedule_exception_belongs_to_shift(): void
+    {
+        $exception = EmployeeScheduleException::factory()->withShift()->create();
+
+        $this->assertInstanceOf(Shift::class, $exception->shift);
     }
 }

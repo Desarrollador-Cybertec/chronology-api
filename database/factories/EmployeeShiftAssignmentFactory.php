@@ -23,6 +23,7 @@ class EmployeeShiftAssignmentFactory extends Factory
             'shift_id' => Shift::factory(),
             'effective_date' => fake()->dateTimeBetween('-60 days', 'now')->format('Y-m-d'),
             'end_date' => null,
+            'work_days' => [1, 2, 3, 4, 5],
         ];
     }
 }

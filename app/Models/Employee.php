@@ -42,6 +42,11 @@ class Employee extends Model
         return $this->hasMany(EmployeeShiftAssignment::class);
     }
 
+    public function scheduleExceptions(): HasMany
+    {
+        return $this->hasMany(EmployeeScheduleException::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
