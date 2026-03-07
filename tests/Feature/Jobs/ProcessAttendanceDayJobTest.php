@@ -144,11 +144,7 @@ class ProcessAttendanceDayJobTest extends TestCase
 
     public function test_uses_system_setting_noise_window(): void
     {
-        SystemSetting::create([
-            'key' => 'noise_window_minutes',
-            'value' => '5',
-            'group' => 'engine',
-        ]);
+        SystemSetting::query()->where('key', 'noise_window_minutes')->update(['value' => '5']);
 
         // Two check-ins within 5 minutes — should be reduced to one group
         $this->createRawLogs(['08:00:00', '08:03:00', '17:00:00']);

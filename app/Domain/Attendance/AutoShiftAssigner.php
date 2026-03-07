@@ -2,6 +2,7 @@
 
 namespace App\Domain\Attendance;
 
+use App\Models\EmployeeShiftAssignment;
 use App\Models\Shift;
 use Carbon\Carbon;
 
@@ -11,14 +12,16 @@ class AutoShiftAssigner
      * Try to resolve a shift for an employee based on their first check-in time.
      *
      * Compares the check-in time against every active shift's start_time
-     * using a configurable tolerance window. Returns the best matching Shift
-     * without creating a persistent assignment.
+     * using a configurable tolerance window. When a match is found, creates
+     * a persistent EmployeeShiftAssignment so subsequent days use the same shift.
      *
+     * @param  int  $employeeId  The employee being processed
      * @param  Carbon  $dateReference  The date of the attendance record
      * @param  Carbon  $firstCheckIn  The employee's first punch of the day
      * @param  int  $toleranceMinutes  Window around shift start (±) to consider a match
      */
     public function resolve(
+        int $employeeId,
         Carbon $dateReference,
         Carbon $firstCheckIn,
         int $toleranceMinutes = 30,
@@ -46,6 +49,15 @@ class AutoShiftAssigner
                     $bestShift = $shift;
                 }
             }
+        }
+
+        if ($bestShift) {
+            EmployeeShiftAssignment::create([
+                'employee_id' => $employeeId,
+                'shift_id' => $bestShift->id,
+                'effective_date' => $dateReference->toDateString(),
+                'work_days' => [1, 2, 3, 4, 5],
+            ]);
         }
 
         return $bestShift;

@@ -56,7 +56,7 @@ class AutoShiftAssignerTest extends TestCase
 
     public function test_resolves_shift_when_checkin_matches_start_time(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         $shift = Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
@@ -65,6 +65,7 @@ class AutoShiftAssignerTest extends TestCase
         ]);
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 08:05:00'),
             30,
@@ -72,12 +73,15 @@ class AutoShiftAssignerTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertEquals($shift->id, $result->id);
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
     public function test_resolves_shift_when_checkin_is_before_start_within_tolerance(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         $shift = Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
@@ -85,6 +89,7 @@ class AutoShiftAssignerTest extends TestCase
         ]);
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 07:40:00'),
             30,
@@ -92,11 +97,15 @@ class AutoShiftAssignerTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertEquals($shift->id, $result->id);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
     public function test_returns_null_when_checkin_outside_tolerance(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
@@ -104,17 +113,19 @@ class AutoShiftAssignerTest extends TestCase
         ]);
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 12:00:00'),
             30,
         );
 
         $this->assertNull($result);
+        $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
     public function test_picks_closest_shift_when_multiple_match(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         Shift::factory()->create([
             'name' => 'Matutino',
             'start_time' => '06:00',
@@ -131,6 +142,7 @@ class AutoShiftAssignerTest extends TestCase
 
         // Check-in at 08:05 — closest to Vespertino (08:00) vs Matutino (06:00)
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 08:05:00'),
             30,
@@ -138,11 +150,15 @@ class AutoShiftAssignerTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertEquals($vespertino->id, $result->id);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $vespertino->id,
+        ]);
     }
 
     public function test_ignores_inactive_shifts(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
@@ -150,30 +166,34 @@ class AutoShiftAssignerTest extends TestCase
         ]);
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 08:00:00'),
             30,
         );
 
         $this->assertNull($result);
+        $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
     public function test_returns_null_when_no_shifts_exist(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 08:00:00'),
             30,
         );
 
         $this->assertNull($result);
+        $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
     public function test_resolves_night_shift_correctly(): void
     {
-        Employee::factory()->create();
+        $employee = Employee::factory()->create();
         $shift = Shift::factory()->create([
             'name' => 'Nocturno',
             'start_time' => '22:00',
@@ -183,6 +203,7 @@ class AutoShiftAssignerTest extends TestCase
         ]);
 
         $result = $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 21:50:00'),
             30,
@@ -190,24 +211,32 @@ class AutoShiftAssignerTest extends TestCase
 
         $this->assertNotNull($result);
         $this->assertEquals($shift->id, $result->id);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
-    public function test_does_not_persist_assignment(): void
+    public function test_persists_assignment_when_shift_matched(): void
     {
-        Employee::factory()->create();
-        Shift::factory()->create([
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
             'is_active' => true,
         ]);
 
         $this->assigner->resolve(
+            $employee->id,
             Carbon::parse('2026-01-15'),
             Carbon::parse('2026-01-15 08:00:00'),
             30,
         );
 
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
     // ── Integration: AttendanceEngine with auto-assign ────────
@@ -247,7 +276,10 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertEquals('present', $result->status);
         $this->assertNotNull($result->shift);
         $this->assertEquals($shift->id, $result->shift->id);
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
     public function test_engine_does_not_auto_assign_when_disabled(): void
@@ -381,8 +413,8 @@ class AutoShiftAssignerTest extends TestCase
             'is_active' => true,
         ]);
 
-        SystemSetting::create(['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance']);
-        SystemSetting::create(['key' => 'auto_assign_tolerance_minutes', 'value' => '30', 'group' => 'attendance']);
+        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
+        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '30']);
 
         $batch = ImportBatch::factory()->create();
         RawLog::factory()->create([
@@ -406,7 +438,10 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertEquals($shift->id, $day->shift_id);
         $this->assertEquals('present', $day->status);
 
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+        ]);
     }
 
     public function test_job_does_not_auto_assign_when_setting_disabled(): void
@@ -418,7 +453,7 @@ class AutoShiftAssignerTest extends TestCase
             'is_active' => true,
         ]);
 
-        SystemSetting::create(['key' => 'auto_assign_shift', 'value' => 'false', 'group' => 'attendance']);
+        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'false']);
 
         $batch = ImportBatch::factory()->create();
         RawLog::factory()->create([
@@ -451,8 +486,8 @@ class AutoShiftAssignerTest extends TestCase
             'is_active' => true,
         ]);
 
-        SystemSetting::create(['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance']);
-        SystemSetting::create(['key' => 'auto_assign_tolerance_minutes', 'value' => '5', 'group' => 'attendance']);
+        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
+        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '5']);
 
         $batch = ImportBatch::factory()->create();
         RawLog::factory()->create([
