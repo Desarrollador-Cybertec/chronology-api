@@ -5,12 +5,21 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
+use App\Models\Shift;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class EmployeeController extends Controller
 {
+    private const SORTABLE_COLUMNS = [
+        'internal_id',
+        'first_name',
+        'last_name',
+        'department',
+        'is_active',
+    ];
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $perPage = min((int) $request->integer('per_page', 15), 100);
@@ -28,9 +37,9 @@ class EmployeeController extends Controller
             });
         }
 
+        $this->applySorting($query, $request);
+
         $employees = $query
-            ->orderBy('last_name')
-            ->orderBy('first_name')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -80,5 +89,38 @@ class EmployeeController extends Controller
             'message' => "Empleado {$status} correctamente.",
             'is_active' => $employee->is_active,
         ]);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Employee>  $query
+     */
+    private function applySorting($query, Request $request): void
+    {
+        $sortBy = $request->input('sort_by', 'last_name');
+        $direction = strtolower($request->input('order', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortBy === 'current_shift') {
+            $query->orderBy(
+                Shift::select('name')
+                    ->join('employee_shift_assignments', 'shifts.id', '=', 'employee_shift_assignments.shift_id')
+                    ->whereColumn('employee_shift_assignments.employee_id', 'employees.id')
+                    ->whereNull('employee_shift_assignments.end_date')
+                    ->where('employee_shift_assignments.effective_date', '<=', now()->toDateString())
+                    ->orderByDesc('employee_shift_assignments.effective_date')
+                    ->limit(1),
+                $direction
+            );
+        } elseif ($sortBy === 'internal_id') {
+            $query->orderByRaw('CAST(internal_id AS UNSIGNED) '.$direction);
+        } elseif (in_array($sortBy, self::SORTABLE_COLUMNS, true)) {
+            $query->orderBy($sortBy, $direction);
+        } else {
+            $query->orderBy('last_name', $direction);
+        }
+
+        if ($sortBy !== 'last_name') {
+            $query->orderBy('last_name');
+        }
+        $query->orderBy('first_name');
     }
 }

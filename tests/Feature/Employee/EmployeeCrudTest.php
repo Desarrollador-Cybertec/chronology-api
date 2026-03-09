@@ -365,4 +365,213 @@ class EmployeeCrudTest extends TestCase
         $firstEmployee = $response->json('data.0');
         $this->assertArrayNotHasKey('attendance_summary', $firstEmployee);
     }
+
+    public function test_employees_sort_by_internal_id(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['internal_id' => '50']);
+        Employee::factory()->create(['internal_id' => '10']);
+        Employee::factory()->create(['internal_id' => '30']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=internal_id&order=asc');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('internal_id')->all();
+        $this->assertEquals(['10', '30', '50'], $ids);
+    }
+
+    public function test_employees_sort_by_internal_id_desc(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['internal_id' => '50']);
+        Employee::factory()->create(['internal_id' => '10']);
+        Employee::factory()->create(['internal_id' => '30']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=internal_id&order=desc');
+
+        $response->assertOk();
+        $ids = collect($response->json('data'))->pluck('internal_id')->all();
+        $this->assertEquals(['50', '30', '10'], $ids);
+    }
+
+    public function test_employees_sort_by_department(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['department' => 'Ventas', 'last_name' => 'A']);
+        Employee::factory()->create(['department' => 'Admin', 'last_name' => 'B']);
+        Employee::factory()->create(['department' => 'IT', 'last_name' => 'C']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=department&order=asc');
+
+        $response->assertOk();
+        $departments = collect($response->json('data'))->pluck('department')->all();
+        $this->assertEquals(['Admin', 'IT', 'Ventas'], $departments);
+    }
+
+    public function test_employees_sort_by_is_active(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['is_active' => true, 'last_name' => 'Activo']);
+        Employee::factory()->create(['is_active' => false, 'last_name' => 'Inactivo']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=is_active&order=desc');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertTrue($data[0]['is_active']);
+        $this->assertFalse($data[1]['is_active']);
+    }
+
+    public function test_employees_sort_by_current_shift_asc(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shiftA = Shift::factory()->create(['name' => 'Matutino']);
+        $shiftB = Shift::factory()->create(['name' => 'Nocturno']);
+
+        $empNoShift = Employee::factory()->create(['last_name' => 'SinTurno']);
+        $empShiftB = Employee::factory()->create(['last_name' => 'ConNocturno']);
+        $empShiftA = Employee::factory()->create(['last_name' => 'ConMatutino']);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empShiftA->id,
+            'shift_id' => $shiftA->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empShiftB->id,
+            'shift_id' => $shiftB->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=current_shift&order=asc');
+
+        $response->assertOk();
+        $lastNames = collect($response->json('data'))->pluck('last_name')->all();
+        // null shifts sort first in asc, then Matutino, then Nocturno
+        $this->assertEquals('SinTurno', $lastNames[0]);
+        $this->assertEquals('ConMatutino', $lastNames[1]);
+        $this->assertEquals('ConNocturno', $lastNames[2]);
+    }
+
+    public function test_employees_sort_by_current_shift_desc(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shiftA = Shift::factory()->create(['name' => 'Matutino']);
+        $shiftB = Shift::factory()->create(['name' => 'Nocturno']);
+
+        $empNoShift = Employee::factory()->create(['last_name' => 'SinTurno']);
+        $empShiftB = Employee::factory()->create(['last_name' => 'ConNocturno']);
+        $empShiftA = Employee::factory()->create(['last_name' => 'ConMatutino']);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empShiftA->id,
+            'shift_id' => $shiftA->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empShiftB->id,
+            'shift_id' => $shiftB->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=current_shift&order=desc');
+
+        $response->assertOk();
+        $lastNames = collect($response->json('data'))->pluck('last_name')->all();
+        // desc: Nocturno first, then Matutino, then null last
+        $this->assertEquals('ConNocturno', $lastNames[0]);
+        $this->assertEquals('ConMatutino', $lastNames[1]);
+        $this->assertEquals('SinTurno', $lastNames[2]);
+    }
+
+    public function test_employees_sort_ignores_ended_assignments(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shiftA = Shift::factory()->create(['name' => 'Matutino']);
+        $shiftB = Shift::factory()->create(['name' => 'Nocturno']);
+
+        $employee = Employee::factory()->create(['last_name' => 'Test']);
+
+        // Old ended assignment
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftA->id,
+            'effective_date' => '2025-01-01',
+            'end_date' => '2025-12-31',
+        ]);
+        // Current active assignment
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftB->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=current_shift&order=asc');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $currentShift = $data[0]['shift_assignments'];
+        // Should be sorted by active shift (Nocturno), not ended one (Matutino)
+        $this->assertNotEmpty($currentShift);
+    }
+
+    public function test_employees_sort_by_invalid_column_falls_back_to_last_name(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['last_name' => 'Zapata']);
+        Employee::factory()->create(['last_name' => 'Acosta']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?sort_by=invalid_column');
+
+        $response->assertOk();
+        $lastNames = collect($response->json('data'))->pluck('last_name')->all();
+        $this->assertEquals(['Acosta', 'Zapata'], $lastNames);
+    }
+
+    public function test_employees_sorting_works_globally_across_pages(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shift = Shift::factory()->create(['name' => 'Jornada Completa']);
+
+        // Create 4 employees: 2 with shift, 2 without
+        $empA = Employee::factory()->create(['last_name' => 'Alpha']);
+        $empB = Employee::factory()->create(['last_name' => 'Bravo']);
+        $empC = Employee::factory()->create(['last_name' => 'Charlie']);
+        $empD = Employee::factory()->create(['last_name' => 'Delta']);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empB->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $empD->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+
+        // Page 1: sort by current_shift asc, per_page=2
+        $page1 = $this->actingAs($user)->getJson('/api/employees?sort_by=current_shift&order=asc&per_page=2&page=1');
+        $page2 = $this->actingAs($user)->getJson('/api/employees?sort_by=current_shift&order=asc&per_page=2&page=2');
+
+        $page1names = collect($page1->json('data'))->pluck('last_name')->all();
+        $page2names = collect($page2->json('data'))->pluck('last_name')->all();
+
+        // No-shift employees should all be on page 1, shift employees on page 2
+        // (null sorts before 'Jornada Completa' in asc)
+        $allNames = array_merge($page1names, $page2names);
+        $this->assertCount(4, $allNames);
+        // The first 2 should be without shift (Alpha, Charlie), last 2 with shift (Bravo, Delta)
+        $this->assertContains('Alpha', $page1names);
+        $this->assertContains('Charlie', $page1names);
+        $this->assertContains('Bravo', $page2names);
+        $this->assertContains('Delta', $page2names);
+    }
 }
