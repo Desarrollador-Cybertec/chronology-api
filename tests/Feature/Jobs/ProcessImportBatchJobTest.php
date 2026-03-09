@@ -75,11 +75,11 @@ class ProcessImportBatchJobTest extends TestCase
         Queue::assertPushed(ProcessAttendanceDayJob::class, 2);
     }
 
-    public function test_marks_batch_as_completed(): void
+    public function test_sets_processing_state_with_total_rows(): void
     {
         Queue::fake([ProcessAttendanceDayJob::class]);
 
-        $batch = ImportBatch::factory()->create(['status' => 'processing']);
+        $batch = ImportBatch::factory()->create(['status' => 'pending']);
         $employee = Employee::factory()->create();
 
         RawLog::factory()->create([
@@ -92,8 +92,9 @@ class ProcessImportBatchJobTest extends TestCase
         (new ProcessImportBatchJob($batch))->handle();
 
         $batch->refresh();
-        $this->assertEquals('completed', $batch->status);
-        $this->assertNotNull($batch->processed_at);
+        $this->assertEquals('processing', $batch->status);
+        $this->assertEquals(1, $batch->total_rows);
+        $this->assertEquals(0, $batch->processed_rows);
     }
 
     public function test_dispatches_nothing_when_batch_has_no_raw_logs(): void
@@ -108,6 +109,8 @@ class ProcessImportBatchJobTest extends TestCase
 
         $batch->refresh();
         $this->assertEquals('completed', $batch->status);
+        $this->assertEquals(0, $batch->total_rows);
+        $this->assertNotNull($batch->processed_at);
     }
 
     public function test_dispatches_correct_employee_and_date(): void
@@ -126,9 +129,10 @@ class ProcessImportBatchJobTest extends TestCase
 
         (new ProcessImportBatchJob($batch))->handle();
 
-        Queue::assertPushed(ProcessAttendanceDayJob::class, function ($job) use ($employee) {
+        Queue::assertPushed(ProcessAttendanceDayJob::class, function ($job) use ($employee, $batch) {
             return $job->employeeId === $employee->id
-                && $job->dateReference === '2026-03-20';
+                && $job->dateReference === '2026-03-20'
+                && $job->importBatchId === $batch->id;
         });
     }
 

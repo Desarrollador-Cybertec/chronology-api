@@ -206,4 +206,59 @@ class ProcessAttendanceDayJobTest extends TestCase
         $this->assertGreaterThan(0, $day->overtime_minutes);
         $this->assertGreaterThan(0, $day->overtime_diurnal_minutes);
     }
+
+    public function test_increments_batch_processed_rows_when_import_batch_id_provided(): void
+    {
+        $batch = ImportBatch::factory()->create([
+            'status' => 'processing',
+            'total_rows' => 3,
+            'processed_rows' => 0,
+        ]);
+
+        $this->createRawLogs(['08:00:00', '17:00:00']);
+
+        $job = new ProcessAttendanceDayJob($this->employee->id, '2026-01-15', $batch->id);
+        app()->call([$job, 'handle']);
+
+        $batch->refresh();
+        $this->assertEquals(1, $batch->processed_rows);
+        $this->assertEquals('processing', $batch->status);
+    }
+
+    public function test_marks_batch_completed_when_last_job_finishes(): void
+    {
+        $batch = ImportBatch::factory()->create([
+            'status' => 'processing',
+            'total_rows' => 1,
+            'processed_rows' => 0,
+        ]);
+
+        $this->createRawLogs(['08:00:00', '17:00:00']);
+
+        $job = new ProcessAttendanceDayJob($this->employee->id, '2026-01-15', $batch->id);
+        app()->call([$job, 'handle']);
+
+        $batch->refresh();
+        $this->assertEquals(1, $batch->processed_rows);
+        $this->assertEquals('completed', $batch->status);
+        $this->assertNotNull($batch->processed_at);
+    }
+
+    public function test_does_not_update_batch_when_no_import_batch_id(): void
+    {
+        $batch = ImportBatch::factory()->create([
+            'status' => 'processing',
+            'total_rows' => 5,
+            'processed_rows' => 0,
+        ]);
+
+        $this->createRawLogs(['08:00:00', '17:00:00']);
+
+        $job = new ProcessAttendanceDayJob($this->employee->id, '2026-01-15');
+        app()->call([$job, 'handle']);
+
+        $batch->refresh();
+        $this->assertEquals(0, $batch->processed_rows);
+        $this->assertEquals('processing', $batch->status);
+    }
 }

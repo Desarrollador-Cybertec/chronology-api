@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Domain\Attendance\AttendanceEngine;
 use App\Models\AttendanceDay;
+use App\Models\ImportBatch;
 use App\Models\RawLog;
 use App\Models\SystemSetting;
 use Carbon\Carbon;
@@ -17,6 +18,7 @@ class ProcessAttendanceDayJob implements ShouldQueue
     public function __construct(
         public int $employeeId,
         public string $dateReference,
+        public ?int $importBatchId = null,
     ) {}
 
     /**
@@ -39,6 +41,8 @@ class ProcessAttendanceDayJob implements ShouldQueue
         $diurnalStart = SystemSetting::getValue('diurnal_start_time', '06:00');
         $nocturnalStart = SystemSetting::getValue('nocturnal_start_time', '20:00');
         $lunchMargin = (int) SystemSetting::getValue('lunch_margin_minutes', '15');
+        $autoAssignMinDays = (int) SystemSetting::getValue('auto_assign_min_days', '3');
+        $autoAssignRegularity = (int) SystemSetting::getValue('auto_assign_regularity_percent', '70');
 
         $result = $engine->process(
             $rawLogs,
@@ -50,6 +54,8 @@ class ProcessAttendanceDayJob implements ShouldQueue
             $diurnalStart,
             $nocturnalStart,
             $lunchMargin,
+            $autoAssignMinDays,
+            $autoAssignRegularity,
         );
 
         AttendanceDay::updateOrCreate(
@@ -70,5 +76,21 @@ class ProcessAttendanceDayJob implements ShouldQueue
                 'status' => $result->status,
             ],
         );
+
+        if ($this->importBatchId) {
+            $batch = ImportBatch::find($this->importBatchId);
+
+            if ($batch) {
+                $batch->increment('processed_rows');
+                $batch->refresh();
+
+                if ($batch->processed_rows >= $batch->total_rows) {
+                    $batch->update([
+                        'status' => 'completed',
+                        'processed_at' => now(),
+                    ]);
+                }
+            }
+        }
     }
 }

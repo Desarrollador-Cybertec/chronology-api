@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Shift;
-use App\Models\SystemSetting;
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,40 +15,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Users
-        User::factory()->superadmin()->create([
-            'name' => 'Super Admin',
-            'email' => 'admin@chronology.test',
-            'password' => bcrypt('test123'),
-        ]);
-
-        User::factory()->manager()->create([
-            'name' => 'Manager User',
-            'email' => 'manager@chronology.test',
-            'password' => bcrypt('test123'),
-        ]);
-
         // Shifts
         Shift::factory()->create([
-            'name' => 'Jornada Completa',
+            'name' => 'Turno 1',
             'start_time' => '07:00',
             'end_time' => '17:00',
             'tolerance_minutes' => 10,
         ]);
+        Shift::factory()->create([
+            'name' => 'Turno 2',
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'tolerance_minutes' => 10,
+        ]);
 
-        // System settings
-        $settings = [
-            ['key' => 'noise_window_minutes', 'value' => '60', 'group' => 'attendance'],
-            ['key' => 'diurnal_start_time', 'value' => '06:00', 'group' => 'attendance'],
-            ['key' => 'nocturnal_start_time', 'value' => '20:00', 'group' => 'attendance'],
-            ['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance'],
-            ['key' => 'auto_assign_tolerance_minutes', 'value' => '60', 'group' => 'attendance'],
-            ['key' => 'lunch_margin_minutes', 'value' => '15', 'group' => 'attendance'],
-            ['key' => 'data_retention_months', 'value' => '24', 'group' => 'general'],
-        ];
-
-        foreach ($settings as $setting) {
-            SystemSetting::create($setting);
-        }
+        Shift::factory()->create([
+            'name' => 'Turno 3',
+            'start_time' => '13:00',
+            'end_time' => '22:00',
+            'tolerance_minutes' => 10,
+        ]);
     }
 }

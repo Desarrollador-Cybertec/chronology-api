@@ -25,16 +25,31 @@ class ProcessImportBatchJob implements ShouldQueue
             ->distinct()
             ->get();
 
+        $total = $groups->count();
+
+        if ($total === 0) {
+            $this->batch->update([
+                'status' => 'completed',
+                'total_rows' => 0,
+                'processed_rows' => 0,
+                'processed_at' => now(),
+            ]);
+
+            return;
+        }
+
+        $this->batch->update([
+            'status' => 'processing',
+            'total_rows' => $total,
+            'processed_rows' => 0,
+        ]);
+
         foreach ($groups as $group) {
             ProcessAttendanceDayJob::dispatch(
                 $group->employee_id,
                 $group->date_reference->toDateString(),
+                $this->batch->id,
             );
         }
-
-        $this->batch->update([
-            'status' => 'completed',
-            'processed_at' => now(),
-        ]);
     }
 }

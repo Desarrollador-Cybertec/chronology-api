@@ -29,6 +29,8 @@ class AttendanceEngine
      * @param  string  $diurnalStartTime  Start of diurnal period
      * @param  string  $nocturnalStartTime  Start of nocturnal period
      * @param  int  $lunchMarginMinutes  Margin for detecting lunch punches
+     * @param  int  $autoAssignMinDays  Minimum days of data before auto-assigning
+     * @param  int  $autoAssignRegularityPercent  Required regularity percentage for auto-assignment
      */
     public function process(
         Collection $rawLogs,
@@ -40,6 +42,8 @@ class AttendanceEngine
         string $diurnalStartTime = '06:00',
         string $nocturnalStartTime = '20:00',
         int $lunchMarginMinutes = 15,
+        int $autoAssignMinDays = 3,
+        int $autoAssignRegularityPercent = 70,
     ): AttendanceResult {
         $schedule = $this->scheduleResolver->resolve($employeeId, $dateReference);
 
@@ -58,6 +62,8 @@ class AttendanceEngine
                 $dateReference,
                 $firstCheckIn,
                 $autoAssignToleranceMinutes,
+                $autoAssignMinDays,
+                $autoAssignRegularityPercent,
             );
         }
 

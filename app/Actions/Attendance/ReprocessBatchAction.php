@@ -36,6 +36,8 @@ class ReprocessBatchAction
         $batch->update([
             'status' => 'processing',
             'processed_at' => null,
+            'total_rows' => 0,
+            'processed_rows' => 0,
         ]);
 
         ProcessImportBatchJob::dispatch($batch);
