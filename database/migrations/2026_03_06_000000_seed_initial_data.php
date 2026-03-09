@@ -30,20 +30,22 @@ return new class extends Migration
             ],
         ]);
 
-        // Shift
-        DB::table('shifts')->insertOrIgnore([
-            'name' => 'Jornada Completa',
-            'start_time' => '07:00',
-            'end_time' => '17:00',
-            'tolerance_minutes' => 10,
-            'crosses_midnight' => false,
-            'overtime_enabled' => false,
-            'overtime_min_block_minutes' => 60,
-            'max_daily_overtime_minutes' => 0,
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Shifts (breaks are seeded in a later migration once the shift_breaks table exists)
+        DB::table('shifts')->updateOrInsert(
+            ['name' => 'Horario 1'],
+            [
+                'start_time' => '07:00',
+                'end_time' => '17:00',
+                'tolerance_minutes' => 10,
+                'crosses_midnight' => false,
+                'overtime_enabled' => true,
+                'overtime_min_block_minutes' => 30,
+                'max_daily_overtime_minutes' => 120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
 
         // System settings
         $settings = [
@@ -51,9 +53,9 @@ return new class extends Migration
             ['key' => 'diurnal_start_time', 'value' => '06:00', 'group' => 'attendance'],
             ['key' => 'nocturnal_start_time', 'value' => '20:00', 'group' => 'attendance'],
             ['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance'],
-            ['key' => 'auto_assign_tolerance_minutes', 'value' => '60', 'group' => 'attendance'],
+            ['key' => 'auto_assign_tolerance_minutes', 'value' => '35', 'group' => 'attendance'],
             ['key' => 'lunch_margin_minutes', 'value' => '15', 'group' => 'attendance'],
-            ['key' => 'data_retention_months', 'value' => '24', 'group' => 'general'],
+            ['key' => 'data_retention_months', 'value' => '2', 'group' => 'general'],
         ];
 
         foreach ($settings as $setting) {
@@ -72,7 +74,7 @@ return new class extends Migration
             'lunch_margin_minutes', 'data_retention_months',
         ])->delete();
 
-        DB::table('shifts')->where('name', 'Jornada Completa')->delete();
+        DB::table('shifts')->where('name', 'Horario 1')->delete();
 
         DB::table('users')->whereIn('email', [
             'admin@chronology.test',

@@ -278,7 +278,8 @@ class ShiftCrudTest extends TestCase
         $this->assertEquals('afternoon_snack', $breaks[2]['type']);
         $this->assertEquals(15, $breaks[2]['duration_minutes']);
 
-        $this->assertDatabaseCount('shift_breaks', 3);
+        $createdShiftId = $response->json('data.id');
+        $this->assertSame(3, \App\Models\ShiftBreak::where('shift_id', $createdShiftId)->count());
     }
 
     public function test_superadmin_can_create_shift_without_breaks(): void
@@ -347,7 +348,7 @@ class ShiftCrudTest extends TestCase
         $response->assertOk()
             ->assertJsonCount(2, 'data.breaks');
 
-        $this->assertDatabaseCount('shift_breaks', 2);
+        $this->assertSame(2, \App\Models\ShiftBreak::where('shift_id', $shift->id)->count());
         $this->assertDatabaseHas('shift_breaks', ['shift_id' => $shift->id, 'type' => 'lunch']);
         $this->assertDatabaseHas('shift_breaks', ['shift_id' => $shift->id, 'type' => 'afternoon_snack']);
     }
@@ -365,7 +366,7 @@ class ShiftCrudTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.name', 'Nombre Actualizado');
 
-        $this->assertDatabaseCount('shift_breaks', 1);
+        $this->assertSame(1, \App\Models\ShiftBreak::where('shift_id', $shift->id)->count());
     }
 
     public function test_create_shift_fails_with_invalid_break_data(): void
@@ -390,10 +391,10 @@ class ShiftCrudTest extends TestCase
         $shift = Shift::factory()->create();
         \App\Models\ShiftBreak::factory()->count(3)->create(['shift_id' => $shift->id]);
 
-        $this->assertDatabaseCount('shift_breaks', 3);
+        $this->assertSame(3, \App\Models\ShiftBreak::where('shift_id', $shift->id)->count());
 
         $this->actingAs($user)->deleteJson("/api/shifts/{$shift->id}");
 
-        $this->assertDatabaseCount('shift_breaks', 0);
+        $this->assertDatabaseMissing('shift_breaks', ['shift_id' => $shift->id]);
     }
 }
