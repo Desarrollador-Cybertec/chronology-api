@@ -13,6 +13,17 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AttendanceController extends Controller
 {
+    private const SORTABLE_COLUMNS = [
+        'date_reference',
+        'first_check_in',
+        'last_check_out',
+        'worked_minutes',
+        'late_minutes',
+        'overtime_minutes',
+        'early_departure_minutes',
+        'status',
+    ];
+
     /**
      * List attendance days with filters and pagination.
      *
@@ -53,8 +64,9 @@ class AttendanceController extends Controller
             $query->where('late_minutes', '>', 0);
         }
 
+        $this->applySorting($query, $request);
+
         $results = $query
-            ->orderByDesc('date_reference')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -94,8 +106,9 @@ class AttendanceController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        $this->applySorting($query, $request);
+
         $results = $query
-            ->orderByDesc('date_reference')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -117,8 +130,9 @@ class AttendanceController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        $this->applySorting($query, $request);
+
         $results = $query
-            ->orderByDesc('date_reference')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -169,5 +183,31 @@ class AttendanceController extends Controller
             'data' => new AttendanceDayResource($attendanceDay),
             'edits_created' => count($edits),
         ]);
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<AttendanceDay>  $query
+     */
+    private function applySorting($query, Request $request): void
+    {
+        $sortBy = $request->input('sort_by', 'date_reference');
+        $direction = strtolower($request->input('order', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if ($sortBy === 'employee') {
+            $query->orderBy(
+                Employee::select('last_name')
+                    ->whereColumn('employees.id', 'attendance_days.employee_id')
+                    ->limit(1),
+                $direction
+            );
+        } elseif (in_array($sortBy, self::SORTABLE_COLUMNS, true)) {
+            $query->orderBy($sortBy, $direction);
+        } else {
+            $query->orderBy('date_reference', $direction);
+        }
+
+        if ($sortBy !== 'date_reference') {
+            $query->orderByDesc('date_reference');
+        }
     }
 }

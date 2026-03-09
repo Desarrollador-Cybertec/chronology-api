@@ -375,4 +375,249 @@ class AttendanceIndexTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_sort_by_worked_minutes_asc(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+            'worked_minutes' => 540,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-16',
+            'worked_minutes' => 300,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-17',
+            'worked_minutes' => 480,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=worked_minutes&order=asc');
+
+        $response->assertOk();
+        $minutes = collect($response->json('data'))->pluck('worked_minutes')->all();
+        $this->assertEquals([300, 480, 540], $minutes);
+    }
+
+    public function test_sort_by_overtime_minutes_desc(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+            'overtime_minutes' => 30,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-16',
+            'overtime_minutes' => 120,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=overtime_minutes&order=desc');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertEquals(120, $data[0]['overtime_minutes']);
+        $this->assertEquals(30, $data[1]['overtime_minutes']);
+    }
+
+    public function test_sort_by_status(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+            'status' => 'present',
+        ]);
+        AttendanceDay::factory()->absent()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-16',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=status&order=asc');
+
+        $response->assertOk();
+        $statuses = collect($response->json('data'))->pluck('status')->all();
+        $this->assertEquals(['absent', 'present'], $statuses);
+    }
+
+    public function test_sort_by_employee_name(): void
+    {
+        $empA = Employee::factory()->create(['last_name' => 'Acosta']);
+        $empZ = Employee::factory()->create(['last_name' => 'Zapata']);
+
+        AttendanceDay::factory()->create([
+            'employee_id' => $empZ->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $empA->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=employee&order=asc');
+
+        $response->assertOk();
+        $lastNames = collect($response->json('data'))->pluck('employee.last_name')->all();
+        $this->assertEquals(['Acosta', 'Zapata'], $lastNames);
+    }
+
+    public function test_sort_by_date_reference_asc(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-20',
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-10',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=date_reference&order=asc');
+
+        $response->assertOk();
+        $dates = collect($response->json('data'))->pluck('date_reference')->all();
+        $this->assertEquals('2026-01-10', $dates[0]);
+        $this->assertEquals('2026-01-20', $dates[1]);
+    }
+
+    public function test_default_sort_is_date_reference_desc(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-10',
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-20',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance');
+
+        $response->assertOk();
+        $dates = collect($response->json('data'))->pluck('date_reference')->all();
+        $this->assertEquals('2026-01-20', $dates[0]);
+        $this->assertEquals('2026-01-10', $dates[1]);
+    }
+
+    public function test_invalid_sort_column_falls_back_to_date_reference(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-10',
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-20',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=hacked_column');
+
+        $response->assertOk();
+        $dates = collect($response->json('data'))->pluck('date_reference')->all();
+        $this->assertEquals('2026-01-20', $dates[0]);
+        $this->assertEquals('2026-01-10', $dates[1]);
+    }
+
+    public function test_sorting_works_across_pages(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+            'late_minutes' => 5,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-16',
+            'late_minutes' => 30,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-17',
+            'late_minutes' => 15,
+        ]);
+
+        $page1 = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=late_minutes&order=asc&per_page=2&page=1');
+        $page2 = $this->actingAs($this->user)
+            ->getJson('/api/attendance?sort_by=late_minutes&order=asc&per_page=2&page=2');
+
+        $p1 = collect($page1->json('data'))->pluck('late_minutes')->all();
+        $p2 = collect($page2->json('data'))->pluck('late_minutes')->all();
+
+        $this->assertEquals([5, 15], $p1);
+        $this->assertEquals([30], $p2);
+    }
+
+    public function test_by_employee_endpoint_supports_sorting(): void
+    {
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+            'worked_minutes' => 540,
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $this->employee->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-16',
+            'worked_minutes' => 300,
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson("/api/attendance/employee/{$this->employee->id}?sort_by=worked_minutes&order=asc");
+
+        $response->assertOk();
+        $minutes = collect($response->json('data'))->pluck('worked_minutes')->all();
+        $this->assertEquals([300, 540], $minutes);
+    }
+
+    public function test_by_date_endpoint_supports_sorting(): void
+    {
+        $empA = Employee::factory()->create(['last_name' => 'Acosta']);
+        $empZ = Employee::factory()->create(['last_name' => 'Zapata']);
+
+        AttendanceDay::factory()->create([
+            'employee_id' => $empZ->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+        ]);
+        AttendanceDay::factory()->create([
+            'employee_id' => $empA->id,
+            'shift_id' => $this->shift->id,
+            'date_reference' => '2026-01-15',
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->getJson('/api/attendance/day/2026-01-15?sort_by=employee&order=asc');
+
+        $response->assertOk();
+        $lastNames = collect($response->json('data'))->pluck('employee.last_name')->all();
+        $this->assertEquals(['Acosta', 'Zapata'], $lastNames);
+    }
 }

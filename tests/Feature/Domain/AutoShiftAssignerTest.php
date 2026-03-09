@@ -511,4 +511,149 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertNull($day->shift_id);
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
+
+    public function test_skips_assignment_when_employee_already_has_active_assignment(): void
+    {
+        $employee = Employee::factory()->create();
+        $existingShift = Shift::factory()->create([
+            'name' => 'Jornada Completa',
+            'start_time' => '07:00',
+            'end_time' => '17:00',
+            'is_active' => true,
+        ]);
+        $otherShift = Shift::factory()->create([
+            'name' => 'Vespertino',
+            'start_time' => '14:00',
+            'end_time' => '22:00',
+            'is_active' => true,
+        ]);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $existingShift->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+        ]);
+
+        // Check-in near Vespertino, but employee already has Jornada Completa
+        $result = $this->assigner->resolve(
+            $employee->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 14:05:00'),
+            30,
+        );
+
+        $this->assertNotNull($result);
+        $this->assertEquals($existingShift->id, $result->id);
+        // Should NOT create a second assignment
+        $this->assertDatabaseCount('employee_shift_assignments', 1);
+    }
+
+    public function test_does_not_create_duplicate_on_reprocess(): void
+    {
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create([
+            'start_time' => '14:00',
+            'end_time' => '22:00',
+            'is_active' => true,
+        ]);
+
+        // First call creates assignment
+        $this->assigner->resolve(
+            $employee->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 14:05:00'),
+            30,
+        );
+
+        $this->assertDatabaseCount('employee_shift_assignments', 1);
+
+        // Second call (reprocess) should NOT create duplicate
+        $result = $this->assigner->resolve(
+            $employee->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 14:05:00'),
+            30,
+        );
+
+        $this->assertNotNull($result);
+        $this->assertEquals($shift->id, $result->id);
+        $this->assertDatabaseCount('employee_shift_assignments', 1);
+    }
+
+    public function test_correctly_picks_between_two_close_shifts(): void
+    {
+        $employee1 = Employee::factory()->create();
+        $employee2 = Employee::factory()->create();
+
+        $shift9 = Shift::factory()->create([
+            'name' => 'Turno 9am',
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'is_active' => true,
+        ]);
+        $shift10 = Shift::factory()->create([
+            'name' => 'Turno 10am',
+            'start_time' => '10:00',
+            'end_time' => '19:00',
+            'is_active' => true,
+        ]);
+
+        // Employee 1 checks in at 09:05 — should match 9am shift
+        $r1 = $this->assigner->resolve(
+            $employee1->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 09:05:00'),
+            30,
+        );
+
+        // Employee 2 checks in at 10:10 — should match 10am shift
+        $r2 = $this->assigner->resolve(
+            $employee2->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 10:10:00'),
+            30,
+        );
+
+        $this->assertEquals($shift9->id, $r1->id);
+        $this->assertEquals($shift10->id, $r2->id);
+
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee1->id,
+            'shift_id' => $shift9->id,
+        ]);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee2->id,
+            'shift_id' => $shift10->id,
+        ]);
+    }
+
+    public function test_assigns_to_closest_shift_in_overlap_zone(): void
+    {
+        $employee = Employee::factory()->create();
+
+        $shift9 = Shift::factory()->create([
+            'name' => 'Turno 9am',
+            'start_time' => '09:00',
+            'end_time' => '18:00',
+            'is_active' => true,
+        ]);
+        Shift::factory()->create([
+            'name' => 'Turno 10am',
+            'start_time' => '10:00',
+            'end_time' => '19:00',
+            'is_active' => true,
+        ]);
+
+        // Check-in at 09:25 — in 9am window (09:00±30 = 8:30-9:30, distance=25)
+        // but NOT in 10am window (10:00±30 = 9:30-10:30, 09:25 < 9:30)
+        $result = $this->assigner->resolve(
+            $employee->id,
+            Carbon::parse('2026-01-15'),
+            Carbon::parse('2026-01-15 09:25:00'),
+            30,
+        );
+
+        $this->assertEquals($shift9->id, $result->id);
+    }
 }

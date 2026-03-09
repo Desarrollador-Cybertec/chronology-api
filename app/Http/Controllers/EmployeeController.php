@@ -111,7 +111,7 @@ class EmployeeController extends Controller
                 $direction
             );
         } elseif ($sortBy === 'internal_id') {
-            $query->orderByRaw('CAST(internal_id AS UNSIGNED) '.$direction);
+            $query->orderByRaw('CAST(internal_id AS UNSIGNED) '.($direction === 'desc' ? 'DESC' : 'ASC'));
         } elseif (in_array($sortBy, self::SORTABLE_COLUMNS, true)) {
             $query->orderBy($sortBy, $direction);
         } else {
