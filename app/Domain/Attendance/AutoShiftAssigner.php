@@ -88,10 +88,15 @@ class AutoShiftAssigner
         }
 
         if ($bestShift) {
+            $earliestDate = RawLog::query()
+                ->where('employee_id', $employeeId)
+                ->orderBy('date_reference')
+                ->value('date_reference') ?? $dateReference->toDateString();
+
             EmployeeShiftAssignment::create([
                 'employee_id' => $employeeId,
                 'shift_id' => $bestShift->id,
-                'effective_date' => $dateReference->toDateString(),
+                'effective_date' => $earliestDate,
                 'work_days' => [1, 2, 3, 4, 5],
             ]);
         }
