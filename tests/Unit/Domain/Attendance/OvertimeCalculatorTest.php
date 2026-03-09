@@ -24,8 +24,6 @@ class OvertimeCalculatorTest extends TestCase
             'start_time' => '08:00',
             'end_time' => '17:00',
             'crosses_midnight' => false,
-            'lunch_required' => false,
-            'lunch_duration_minutes' => 0,
             'tolerance_minutes' => 10,
             'overtime_enabled' => true,
             'overtime_min_block_minutes' => 60,
@@ -212,8 +210,6 @@ class OvertimeCalculatorTest extends TestCase
     public function test_overtime_with_lunch_shift(): void
     {
         $shift = $this->makeShift([
-            'lunch_required' => true,
-            'lunch_duration_minutes' => 60,
             'overtime_min_block_minutes' => 60,
         ]);
 

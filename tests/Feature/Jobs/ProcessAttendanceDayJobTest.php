@@ -31,7 +31,6 @@ class ProcessAttendanceDayJobTest extends TestCase
             'end_time' => '17:00',
             'crosses_midnight' => false,
             'tolerance_minutes' => 10,
-            'lunch_required' => false,
             'overtime_enabled' => false,
         ]);
 

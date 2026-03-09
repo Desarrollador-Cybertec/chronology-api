@@ -16,10 +16,6 @@ class Shift extends Model
         'start_time',
         'end_time',
         'crosses_midnight',
-        'lunch_required',
-        'lunch_start_time',
-        'lunch_end_time',
-        'lunch_duration_minutes',
         'tolerance_minutes',
         'overtime_enabled',
         'overtime_min_block_minutes',
@@ -31,10 +27,8 @@ class Shift extends Model
     {
         return [
             'crosses_midnight' => 'boolean',
-            'lunch_required' => 'boolean',
             'overtime_enabled' => 'boolean',
             'is_active' => 'boolean',
-            'lunch_duration_minutes' => 'integer',
             'tolerance_minutes' => 'integer',
             'overtime_min_block_minutes' => 'integer',
             'max_daily_overtime_minutes' => 'integer',
@@ -56,15 +50,8 @@ class Shift extends Model
         return $this->hasMany(ShiftBreak::class)->orderBy('position');
     }
 
-    /**
-     * Total configured break minutes (sum of all shift_breaks, or legacy lunch_duration_minutes).
-     */
     public function getTotalBreakMinutesAttribute(): int
     {
-        if ($this->relationLoaded('breaks') && $this->breaks->isNotEmpty()) {
-            return $this->breaks->sum('duration_minutes');
-        }
-
-        return $this->lunch_duration_minutes ?? 0;
+        return (int) $this->breaks->sum('duration_minutes');
     }
 }

@@ -35,8 +35,8 @@ class AttendanceDayBuilder
 
         $workedMinutes = (int) $firstCheck->diffInMinutes($lastCheck);
 
-        if ($shift && $shift->lunch_required && $shift->lunch_duration_minutes > 0) {
-            $workedMinutes = max(0, $workedMinutes - $shift->lunch_duration_minutes);
+        if ($shift) {
+            $workedMinutes = max(0, $workedMinutes - $shift->total_break_minutes);
         }
 
         return new AttendanceResult(

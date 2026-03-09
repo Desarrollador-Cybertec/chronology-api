@@ -36,10 +36,6 @@ class DatabaseSeeder extends Seeder
             'start_time' => '07:00',
             'end_time' => '17:00',
             'tolerance_minutes' => 10,
-            'lunch_required' => true,
-            'lunch_start_time' => '12:00',
-            'lunch_end_time' => '13:00',
-            'lunch_duration_minutes' => 60,
         ]);
 
         // System settings

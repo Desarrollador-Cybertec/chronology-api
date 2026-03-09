@@ -23,7 +23,7 @@ class ShiftCrudTest extends TestCase
                 'data' => [
                     '*' => [
                         'id', 'name', 'start_time', 'end_time',
-                        'crosses_midnight', 'lunch_required', 'lunch_duration_minutes',
+                        'crosses_midnight',
                         'tolerance_minutes', 'overtime_enabled', 'overtime_min_block_minutes',
                         'max_daily_overtime_minutes', 'is_active',
                     ],
@@ -50,15 +50,11 @@ class ShiftCrudTest extends TestCase
             'start_time' => '06:00',
             'end_time' => '14:00',
             'tolerance_minutes' => 15,
-            'lunch_required' => true,
-            'lunch_duration_minutes' => 60,
         ]);
 
         $response->assertStatus(201)
             ->assertJsonPath('data.name', 'Turno Mañana')
-            ->assertJsonPath('data.tolerance_minutes', 15)
-            ->assertJsonPath('data.lunch_required', true)
-            ->assertJsonPath('data.lunch_duration_minutes', 60);
+            ->assertJsonPath('data.tolerance_minutes', 15);
 
         $this->assertDatabaseHas('shifts', ['name' => 'Turno Mañana']);
     }
