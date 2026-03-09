@@ -55,7 +55,6 @@ class AttendanceController extends Controller
 
         $results = $query
             ->orderByDesc('date_reference')
-            ->orderBy('employee_id')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -119,7 +118,7 @@ class AttendanceController extends Controller
         }
 
         $results = $query
-            ->orderBy('employee_id')
+            ->orderByDesc('date_reference')
             ->paginate($perPage)
             ->withQueryString();
 

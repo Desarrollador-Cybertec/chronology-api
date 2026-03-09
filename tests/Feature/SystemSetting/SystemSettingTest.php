@@ -38,11 +38,10 @@ class SystemSettingTest extends TestCase
     public function test_superadmin_can_update_settings(): void
     {
         $user = User::factory()->superadmin()->create();
-        SystemSetting::create([
-            'key' => 'noise_window_minutes',
-            'value' => '60',
-            'group' => 'engine',
-        ]);
+        SystemSetting::updateOrCreate(
+            ['key' => 'noise_window_minutes'],
+            ['value' => '60', 'group' => 'engine'],
+        );
 
         $response = $this->actingAs($user)->putJson('/api/settings', [
             'settings' => [

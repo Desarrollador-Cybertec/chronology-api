@@ -9,24 +9,28 @@ use Illuminate\Support\Collection;
 class LunchAnalyzer
 {
     /**
-     * Analyze lunch break from reduced logs and calculate effective lunch deduction.
+     * Analyze breaks from reduced logs and calculate total break deduction.
      *
-     * When the shift has lunch_start_time and lunch_end_time defined,
-     * the analyzer looks for intermediate punches that fall within or near
-     * the lunch window to determine the actual lunch break taken.
+     * If the shift has configured break blocks (shift_breaks table), their
+     * total duration is used. Otherwise, falls back to legacy single-lunch
+     * analysis using lunch_start_time / lunch_end_time columns.
      *
      * @param  Collection  $reducedLogs  Noise-filtered RawLog entries (sorted by check_time)
-     * @param  Shift  $shift  The resolved shift with lunch configuration
+     * @param  Shift  $shift  The resolved shift with break/lunch configuration
      * @param  Carbon  $dateReference  The date being processed
-     * @return int Minutes to deduct for lunch
+     * @return int Minutes to deduct for breaks
      */
     public function analyze(Collection $reducedLogs, Shift $shift, Carbon $dateReference, int $lunchMarginMinutes = 15): int
     {
-        if (! $shift->lunch_required) {
+        if ($reducedLogs->count() < 2) {
             return 0;
         }
 
-        if ($reducedLogs->count() < 2) {
+        if ($shift->relationLoaded('breaks') && $shift->breaks->isNotEmpty()) {
+            return $this->analyzeWithBreakBlocks($reducedLogs, $shift, $dateReference, $lunchMarginMinutes);
+        }
+
+        if (! $shift->lunch_required) {
             return 0;
         }
 
@@ -38,12 +42,89 @@ class LunchAnalyzer
     }
 
     /**
-     * Analyze lunch using defined lunch window times and intermediate punches.
+     * Analyze using configured break blocks from the shift_breaks table.
      *
-     * Looks for a pair of punches where the employee left during the lunch
-     * window (exit punch) and returned after (entry punch). If found, uses
-     * the actual break duration. Otherwise falls back to the configured
-     * lunch_duration_minutes.
+     * For each break block, attempts to detect actual punch pairs within
+     * the break window. If detected, uses the actual duration; otherwise
+     * uses the configured duration_minutes for that block.
+     */
+    private function analyzeWithBreakBlocks(Collection $reducedLogs, Shift $shift, Carbon $dateReference, int $marginMinutes): int
+    {
+        $sorted = $reducedLogs->sortBy('check_time')->values();
+        $firstCheck = $sorted->first()->check_time;
+        $lastCheck = $sorted->last()->check_time;
+        $totalDeduction = 0;
+
+        foreach ($shift->breaks as $breakBlock) {
+            $breakStart = $dateReference->copy()->setTimeFromTimeString($breakBlock->start_time);
+            $breakEnd = $dateReference->copy()->setTimeFromTimeString($breakBlock->end_time);
+
+            if ($firstCheck->gte($breakEnd) || $lastCheck->lte($breakStart)) {
+                continue;
+            }
+
+            if ($sorted->count() >= 4) {
+                $detected = $this->detectBreakPunch($sorted, $breakStart, $breakEnd, $marginMinutes);
+
+                if ($detected !== null) {
+                    $totalDeduction += $detected;
+
+                    continue;
+                }
+            }
+
+            $totalDeduction += $breakBlock->duration_minutes;
+        }
+
+        return $totalDeduction;
+    }
+
+    /**
+     * Try to detect a punch pair (exit + return) within a break window.
+     *
+     * @return int|null Actual break minutes if detected, null otherwise
+     */
+    private function detectBreakPunch(Collection $sorted, Carbon $breakStart, Carbon $breakEnd, int $marginMinutes): ?int
+    {
+        $exitPunch = null;
+        $returnPunch = null;
+
+        for ($i = 1; $i < $sorted->count() - 1; $i++) {
+            $punchTime = $sorted[$i]->check_time;
+
+            if (! $exitPunch && $this->isNearTime($punchTime, $breakStart, $marginMinutes)) {
+                $exitPunch = $punchTime;
+
+                continue;
+            }
+
+            if ($exitPunch && ! $returnPunch && $this->isNearTime($punchTime, $breakEnd, $marginMinutes)) {
+                $returnPunch = $punchTime;
+
+                break;
+            }
+        }
+
+        if ($exitPunch && $returnPunch) {
+            return (int) $exitPunch->diffInMinutes($returnPunch);
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if a punch time is near a target time (within margin).
+     */
+    private function isNearTime(Carbon $punchTime, Carbon $target, int $marginMinutes): bool
+    {
+        $windowStart = $target->copy()->subMinutes($marginMinutes);
+        $windowEnd = $target->copy()->addMinutes($marginMinutes);
+
+        return $punchTime->between($windowStart, $windowEnd);
+    }
+
+    /**
+     * Legacy: Analyze lunch using defined lunch window times and intermediate punches.
      */
     private function analyzeWithLunchWindow(Collection $reducedLogs, Shift $shift, Carbon $dateReference, int $lunchMarginMinutes = 15): int
     {

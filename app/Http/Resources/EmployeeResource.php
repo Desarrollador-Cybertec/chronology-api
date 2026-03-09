@@ -24,6 +24,20 @@ class EmployeeResource extends JsonResource
             'shift_assignments' => EmployeeShiftAssignmentResource::collection(
                 $this->whenLoaded('shiftAssignments')
             ),
+            'attendance_summary' => $this->when(
+                $this->total_days_worked !== null,
+                fn () => [
+                    'total_days_worked' => (int) $this->total_days_worked,
+                    'total_days_absent' => (int) $this->total_days_absent,
+                    'total_days_incomplete' => (int) $this->total_days_incomplete,
+                    'total_worked_minutes' => (int) $this->total_worked_minutes,
+                    'total_overtime_minutes' => (int) $this->total_overtime_minutes,
+                    'total_overtime_diurnal_minutes' => (int) $this->total_overtime_diurnal_minutes,
+                    'total_overtime_nocturnal_minutes' => (int) $this->total_overtime_nocturnal_minutes,
+                    'total_late_minutes' => (int) $this->total_late_minutes,
+                    'total_early_departure_minutes' => (int) $this->total_early_departure_minutes,
+                ],
+            ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

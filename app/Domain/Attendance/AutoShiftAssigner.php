@@ -26,7 +26,7 @@ class AutoShiftAssigner
         Carbon $firstCheckIn,
         int $toleranceMinutes = 30,
     ): ?Shift {
-        $shifts = Shift::query()->where('is_active', true)->get();
+        $shifts = Shift::query()->with('breaks')->where('is_active', true)->get();
 
         if ($shifts->isEmpty()) {
             return null;

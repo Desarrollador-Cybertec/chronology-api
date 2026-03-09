@@ -12,7 +12,7 @@ class SystemSettingController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
-        $settings = SystemSetting::query()->orderBy('group')->orderBy('key')->get();
+        $settings = SystemSetting::query()->orderBy('id')->get();
 
         return SystemSettingResource::collection($settings);
     }

@@ -19,7 +19,7 @@ class ImportController extends Controller
 
         $batches = ImportBatch::query()
             ->with('uploadedBy')
-            ->orderByDesc('created_at')
+            ->orderBy('id')
             ->paginate($perPage)
             ->withQueryString();
 

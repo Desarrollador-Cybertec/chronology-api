@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Employee;
 
+use App\Models\AttendanceDay;
 use App\Models\Employee;
 use App\Models\EmployeeShiftAssignment;
 use App\Models\Shift;
@@ -41,7 +42,7 @@ class EmployeeCrudTest extends TestCase
         $response->assertOk();
     }
 
-    public function test_employees_are_ordered_by_last_name(): void
+    public function test_employees_are_ordered_alphabetically(): void
     {
         $user = User::factory()->superadmin()->create();
         Employee::factory()->create(['last_name' => 'Zapata']);
@@ -53,6 +54,61 @@ class EmployeeCrudTest extends TestCase
         $data = $response->json('data');
         $this->assertEquals('Acosta', $data[0]['last_name']);
         $this->assertEquals('Zapata', $data[1]['last_name']);
+    }
+
+    public function test_employees_search_by_name(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['first_name' => 'Carlos', 'last_name' => 'Pérez']);
+        Employee::factory()->create(['first_name' => 'María', 'last_name' => 'López']);
+        Employee::factory()->create(['first_name' => 'Juan', 'last_name' => 'García']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?search=Carlos');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertEquals('Carlos', $data[0]['first_name']);
+    }
+
+    public function test_employees_search_by_last_name(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['first_name' => 'Carlos', 'last_name' => 'Pérez']);
+        Employee::factory()->create(['first_name' => 'María', 'last_name' => 'López']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?search=López');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertEquals('López', $data[0]['last_name']);
+    }
+
+    public function test_employees_search_by_internal_id(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['internal_id' => 'EMP-001']);
+        Employee::factory()->create(['internal_id' => 'EMP-002']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?search=EMP-001');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertCount(1, $data);
+        $this->assertEquals('EMP-001', $data[0]['internal_id']);
+    }
+
+    public function test_employees_search_returns_empty_when_no_match(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['first_name' => 'Carlos', 'last_name' => 'Pérez']);
+
+        $response = $this->actingAs($user)->getJson('/api/employees?search=NoExiste');
+
+        $response->assertOk();
+        $data = $response->json('data');
+        $this->assertCount(0, $data);
     }
 
     public function test_employees_include_shift_assignments_when_loaded(): void
@@ -212,5 +268,101 @@ class EmployeeCrudTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('meta.per_page', 100);
+    }
+
+    public function test_employee_show_includes_attendance_summary(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create();
+
+        AttendanceDay::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'date_reference' => '2026-01-10',
+            'status' => 'present',
+            'worked_minutes' => 480,
+            'overtime_minutes' => 30,
+            'overtime_diurnal_minutes' => 20,
+            'overtime_nocturnal_minutes' => 10,
+            'late_minutes' => 5,
+            'early_departure_minutes' => 0,
+        ]);
+
+        AttendanceDay::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'date_reference' => '2026-01-11',
+            'status' => 'present',
+            'worked_minutes' => 500,
+            'overtime_minutes' => 60,
+            'overtime_diurnal_minutes' => 40,
+            'overtime_nocturnal_minutes' => 20,
+            'late_minutes' => 0,
+            'early_departure_minutes' => 10,
+        ]);
+
+        AttendanceDay::factory()->absent()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'date_reference' => '2026-01-12',
+        ]);
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}");
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'data' => [
+                    'attendance_summary' => [
+                        'total_days_worked',
+                        'total_days_absent',
+                        'total_days_incomplete',
+                        'total_worked_minutes',
+                        'total_overtime_minutes',
+                        'total_overtime_diurnal_minutes',
+                        'total_overtime_nocturnal_minutes',
+                        'total_late_minutes',
+                        'total_early_departure_minutes',
+                    ],
+                ],
+            ]);
+
+        $summary = $response->json('data.attendance_summary');
+        $this->assertEquals(2, $summary['total_days_worked']);
+        $this->assertEquals(1, $summary['total_days_absent']);
+        $this->assertEquals(0, $summary['total_days_incomplete']);
+        $this->assertEquals(980, $summary['total_worked_minutes']);
+        $this->assertEquals(90, $summary['total_overtime_minutes']);
+        $this->assertEquals(60, $summary['total_overtime_diurnal_minutes']);
+        $this->assertEquals(30, $summary['total_overtime_nocturnal_minutes']);
+        $this->assertEquals(5, $summary['total_late_minutes']);
+        $this->assertEquals(10, $summary['total_early_departure_minutes']);
+    }
+
+    public function test_employee_show_summary_with_no_attendance_data(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+
+        $response = $this->actingAs($user)->getJson("/api/employees/{$employee->id}");
+
+        $response->assertOk();
+
+        $summary = $response->json('data.attendance_summary');
+        $this->assertEquals(0, $summary['total_days_worked']);
+        $this->assertEquals(0, $summary['total_days_absent']);
+        $this->assertEquals(0, $summary['total_worked_minutes']);
+    }
+
+    public function test_employee_index_does_not_include_attendance_summary(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees');
+
+        $response->assertOk();
+        $firstEmployee = $response->json('data.0');
+        $this->assertArrayNotHasKey('attendance_summary', $firstEmployee);
     }
 }

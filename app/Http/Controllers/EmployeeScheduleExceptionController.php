@@ -19,7 +19,7 @@ class EmployeeScheduleExceptionController extends Controller
 
         $exceptions = $employee->scheduleExceptions()
             ->with('shift')
-            ->orderByDesc('date')
+            ->orderBy('id')
             ->paginate($perPage)
             ->withQueryString();
 

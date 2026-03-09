@@ -27,6 +27,7 @@ class ShiftResource extends JsonResource
             'overtime_min_block_minutes' => $this->overtime_min_block_minutes,
             'max_daily_overtime_minutes' => $this->max_daily_overtime_minutes,
             'is_active' => $this->is_active,
+            'breaks' => ShiftBreakResource::collection($this->whenLoaded('breaks')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

@@ -50,4 +50,21 @@ class Shift extends Model
     {
         return $this->hasMany(AttendanceDay::class);
     }
+
+    public function breaks(): HasMany
+    {
+        return $this->hasMany(ShiftBreak::class)->orderBy('position');
+    }
+
+    /**
+     * Total configured break minutes (sum of all shift_breaks, or legacy lunch_duration_minutes).
+     */
+    public function getTotalBreakMinutesAttribute(): int
+    {
+        if ($this->relationLoaded('breaks') && $this->breaks->isNotEmpty()) {
+            return $this->breaks->sum('duration_minutes');
+        }
+
+        return $this->lunch_duration_minutes ?? 0;
+    }
 }

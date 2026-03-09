@@ -17,6 +17,7 @@ class ShiftController extends Controller
         $perPage = min((int) $request->integer('per_page', 15), 100);
 
         $shifts = Shift::query()
+            ->with('breaks')
             ->orderBy('name')
             ->paginate($perPage)
             ->withQueryString();
@@ -26,7 +27,17 @@ class ShiftController extends Controller
 
     public function store(StoreShiftRequest $request): JsonResponse
     {
-        $shift = Shift::create($request->validated());
+        $validated = $request->validated();
+        $breaks = $validated['breaks'] ?? [];
+        unset($validated['breaks']);
+
+        $shift = Shift::create($validated);
+
+        if (! empty($breaks)) {
+            $shift->breaks()->createMany($breaks);
+        }
+
+        $shift->load('breaks');
 
         return (new ShiftResource($shift))
             ->response()
@@ -35,12 +46,25 @@ class ShiftController extends Controller
 
     public function show(Shift $shift): ShiftResource
     {
+        $shift->load('breaks');
+
         return new ShiftResource($shift);
     }
 
     public function update(UpdateShiftRequest $request, Shift $shift): ShiftResource
     {
-        $shift->update($request->validated());
+        $validated = $request->validated();
+        $breaks = $validated['breaks'] ?? null;
+        unset($validated['breaks']);
+
+        $shift->update($validated);
+
+        if ($breaks !== null) {
+            $shift->breaks()->delete();
+            $shift->breaks()->createMany($breaks);
+        }
+
+        $shift->load('breaks');
 
         return new ShiftResource($shift);
     }

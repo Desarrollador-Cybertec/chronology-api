@@ -30,6 +30,12 @@ class UpdateShiftRequest extends FormRequest
             'overtime_min_block_minutes' => ['sometimes', 'integer', 'min:0'],
             'max_daily_overtime_minutes' => ['sometimes', 'integer', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],
+            'breaks' => ['sometimes', 'array'],
+            'breaks.*.type' => ['required', 'string', 'max:50'],
+            'breaks.*.start_time' => ['required', 'date_format:H:i'],
+            'breaks.*.end_time' => ['required', 'date_format:H:i'],
+            'breaks.*.duration_minutes' => ['required', 'integer', 'min:1', 'max:120'],
+            'breaks.*.position' => ['sometimes', 'integer', 'min:0'],
         ];
     }
 }

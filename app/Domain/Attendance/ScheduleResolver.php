@@ -18,6 +18,7 @@ class ScheduleResolver
     public function resolve(int $employeeId, Carbon $date): ScheduleResult
     {
         $exception = EmployeeScheduleException::query()
+            ->with('shift.breaks')
             ->where('employee_id', $employeeId)
             ->whereDate('date', $date->toDateString())
             ->first();
@@ -31,6 +32,7 @@ class ScheduleResolver
         }
 
         $assignment = EmployeeShiftAssignment::query()
+            ->with('shift.breaks')
             ->where('employee_id', $employeeId)
             ->whereDate('effective_date', '<=', $date->toDateString())
             ->where(function ($query) use ($date) {
