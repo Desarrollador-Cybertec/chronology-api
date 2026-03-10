@@ -930,7 +930,7 @@
 
                 <div class="endpoint-body">
 
-                    <p class="endpoint-desc">Lista todos los empleados paginados (20 por página), ordenados por apellido. Incluye asignaciones de turno.</p>
+                    <p class="endpoint-desc">Lista todos los empleados paginados (15 por página), ordenados por apellido por defecto. Incluye asignaciones de turno vigentes.</p>
 
                     <div class="block-label">Headers</div>
 
@@ -943,6 +943,14 @@
                         <thead><tr><th>Param</th><th>Tipo</th><th>Descripción</th></tr></thead>
 
                         <tbody>
+
+                            <tr><td class="param-name">search</td><td class="param-type">string</td><td class="param-desc">Busca por nombre, apellido, <code>internal_id</code> o departamento</td></tr>
+
+                            <tr><td class="param-name">sort_by</td><td class="param-type">string</td><td class="param-desc"><code>last_name</code> (default), <code>first_name</code>, <code>internal_id</code>, <code>department</code>, <code>is_active</code></td></tr>
+
+                            <tr><td class="param-name">order</td><td class="param-type">string</td><td class="param-desc"><code>asc</code> (default) o <code>desc</code></td></tr>
+
+                            <tr><td class="param-name">per_page</td><td class="param-type">integer</td><td class="param-desc">Resultados por página (default: 15, max: 100)</td></tr>
 
                             <tr><td class="param-name">page</td><td class="param-type">integer</td><td class="param-desc">Número de página (default: 1)</td></tr>
 
@@ -970,13 +978,17 @@
 
     <span class="key">"is_active"</span>:        <span class="boo">true</span>,
 
-    <span class="key">"shift_assignments"</span>: <span class="kw">[...]</span>
+    <span class="key">"shift_assignments"</span>: <span class="kw">[...]</span>,
+
+    <span class="key">"created_at"</span>: <span class="str">"2025-01-01T00:00:00.000000Z"</span>,
+
+    <span class="key">"updated_at"</span>: <span class="str">"2025-01-01T00:00:00.000000Z"</span>
 
   <span class="kw">}]</span>,
 
   <span class="key">"links"</span>: <span class="kw">{...}</span>,
 
-  <span class="key">"meta"</span>:  <span class="kw">{</span> <span class="key">"current_page"</span>: <span class="num">1</span>, <span class="key">"total"</span>: <span class="num">42</span>, <span class="key">"per_page"</span>: <span class="num">20</span> <span class="kw">}</span>
+  <span class="key">"meta"</span>:  <span class="kw">{</span> <span class="key">"current_page"</span>: <span class="num">1</span>, <span class="key">"total"</span>: <span class="num">42</span>, <span class="key">"per_page"</span>: <span class="num">15</span> <span class="kw">}</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -1002,7 +1014,7 @@
 
                 <div class="endpoint-body">
 
-                    <p class="endpoint-desc">Devuelve un empleado con sus asignaciones de turno.</p>
+                    <p class="endpoint-desc">Devuelve un empleado con sus asignaciones de turno y un resumen de asistencia acumulado (días trabajados, ausentes, incompletos, minutos trabajados, horas extra y tardanzas).</p>
 
                     <div class="block-label">Headers</div>
 
@@ -1140,14 +1152,6 @@
 
   <span class="key">"crosses_midnight"</span>:           <span class="boo">false</span>,
 
-  <span class="key">"lunch_required"</span>:             <span class="boo">true</span>,
-
-  <span class="key">"lunch_start_time"</span>:           <span class="str">"12:00"</span>,
-
-  <span class="key">"lunch_end_time"</span>:             <span class="str">"13:00"</span>,
-
-  <span class="key">"lunch_duration_minutes"</span>:     <span class="num">60</span>,
-
   <span class="key">"tolerance_minutes"</span>:          <span class="num">5</span>,
 
   <span class="key">"overtime_enabled"</span>:           <span class="boo">true</span>,
@@ -1156,7 +1160,23 @@
 
   <span class="key">"max_daily_overtime_minutes"</span>:  <span class="num">120</span>,
 
-  <span class="key">"is_active"</span>:                  <span class="boo">true</span>
+  <span class="key">"is_active"</span>:                  <span class="boo">true</span>,
+
+  <span class="key">"breaks"</span>: <span class="kw">[{</span>
+
+    <span class="key">"id"</span>:               <span class="num">1</span>,
+
+    <span class="key">"type"</span>:             <span class="str">"lunch"</span>,
+
+    <span class="key">"start_time"</span>:       <span class="str">"12:00"</span>,
+
+    <span class="key">"end_time"</span>:         <span class="str">"13:00"</span>,
+
+    <span class="key">"duration_minutes"</span>: <span class="num">60</span>,
+
+    <span class="key">"position"</span>:         <span class="num">0</span>
+
+  <span class="kw">}]</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -1228,14 +1248,6 @@
 
   <span class="key">"crosses_midnight"</span>:           <span class="boo">true</span>,              <span class="cmt">// opcional</span>
 
-  <span class="key">"lunch_required"</span>:             <span class="boo">false</span>,             <span class="cmt">// opcional</span>
-
-  <span class="key">"lunch_start_time"</span>:           <span class="str">"12:00"</span>,           <span class="cmt">// opcional, HH:mm</span>
-
-  <span class="key">"lunch_end_time"</span>:             <span class="str">"13:00"</span>,           <span class="cmt">// opcional, HH:mm</span>
-
-  <span class="key">"lunch_duration_minutes"</span>:     <span class="num">0</span>,                 <span class="cmt">// opcional, 0–120</span>
-
   <span class="key">"tolerance_minutes"</span>:          <span class="num">10</span>,                <span class="cmt">// opcional, 0–60</span>
 
   <span class="key">"overtime_enabled"</span>:           <span class="boo">true</span>,              <span class="cmt">// opcional</span>
@@ -1244,7 +1256,21 @@
 
   <span class="key">"max_daily_overtime_minutes"</span>:  <span class="num">120</span>,               <span class="cmt">// opcional</span>
 
-  <span class="key">"is_active"</span>:                  <span class="boo">true</span>               <span class="cmt">// opcional</span>
+  <span class="key">"is_active"</span>:                  <span class="boo">true</span>,              <span class="cmt">// opcional</span>
+
+  <span class="key">"breaks"</span>: <span class="kw">[{</span>                                     <span class="cmt">// opcional</span>
+
+    <span class="key">"type"</span>:             <span class="str">"lunch"</span>,           <span class="cmt">// requerido, string (ej: "lunch", "rest")</span>
+
+    <span class="key">"start_time"</span>:       <span class="str">"23:00"</span>,           <span class="cmt">// requerido, HH:mm</span>
+
+    <span class="key">"end_time"</span>:         <span class="str">"23:30"</span>,           <span class="cmt">// requerido, HH:mm</span>
+
+    <span class="key">"duration_minutes"</span>: <span class="num">30</span>,                <span class="cmt">// requerido, 1–120</span>
+
+    <span class="key">"position"</span>:         <span class="num">0</span>                 <span class="cmt">// opcional, orden de visualización</span>
+
+  <span class="kw">}]</span>
 
 <span class="kw">}</span></pre></div>
 
@@ -1890,7 +1916,7 @@
 
                 <span>ℹ️</span>
 
-                <span>Los registros de asistencia se generan automáticamente al procesar un CSV importado. Cada registro corresponde a un empleado en un día específico.</span>
+                <span>Los registros de asistencia se generan automáticamente al procesar un CSV importado. Cada registro corresponde a un empleado en un día específico. El turno del empleado se resuelve en tiempo de cálculo a través de sus asignaciones en <code>employee_shift_assignments</code>; <strong>no se almacena</strong> <code>shift_id</code> directamente en el registro de asistencia.</span>
 
             </div>
 
@@ -1962,10 +1988,6 @@
 
     <span class="key">"date_reference"</span>:            <span class="str">"2026-01-15"</span>,
 
-    <span class="key">"shift_id"</span>:                  <span class="num">2</span>,
-
-    <span class="key">"shift"</span>:                     <span class="kw">{</span> <span class="key">"id"</span>: <span class="num">2</span>, <span class="key">"name"</span>: <span class="str">"Diurno"</span>, <span class="key">"..."</span> <span class="kw">}</span>,
-
     <span class="key">"first_check_in"</span>:            <span class="str">"2026-01-15 08:05:00"</span>,
 
     <span class="key">"last_check_out"</span>:            <span class="str">"2026-01-15 17:02:00"</span>,
@@ -2030,9 +2052,9 @@
 
     <span class="key">"id"</span>:                 <span class="num">1</span>,
 
-    <span class="key">"employee"</span>:           <span class="kw">{...}</span>,
+    <span class="key">"employee_id"</span>:        <span class="num">5</span>,
 
-    <span class="key">"shift"</span>:              <span class="kw">{...}</span>,
+    <span class="key">"employee"</span>:           <span class="kw">{...}</span>,
 
     <span class="key">"date_reference"</span>:     <span class="str">"2026-01-15"</span>,
 
@@ -2354,9 +2376,9 @@
 
                         <p style="color:#9ca3af; font-size:0.8rem; margin:4px 0 0 0">
 
-                            Si los empleados ya tienen turno asignado, se usa ese turno directamente.
+                            Si los empleados ya tienen turno asignado para la semana del CSV, se usa ese turno directamente.
 
-                            Si no tienen asignación y <code>auto_assign_shift</code> está activo (por defecto: <code>true</code>), el sistema intenta asignarles un turno automáticamente basándose en su hora de entrada.
+                            Si no tienen asignación y <code>auto_assign_shift</code> está activo (por defecto: <code>true</code>), el sistema analiza las marcaciones de la semana y asigna automáticamente el turno que mejor coincide con el patrón de entrada del empleado.
 
                         </p>
 
@@ -2398,9 +2420,11 @@
 
                                 <tr><td style="padding:4px 8px"><code>noise_window_minutes</code></td><td style="padding:4px 8px"><code>60</code></td><td style="padding:4px 8px">Ventana (min) para filtrar marcajes duplicados del biométrico</td></tr>
 
-                                <tr><td style="padding:4px 8px"><code>auto_assign_shift</code></td><td style="padding:4px 8px"><code>true</code></td><td style="padding:4px 8px">Habilitar auto-asignación de turno si el empleado no tiene uno</td></tr>
+                                <tr><td style="padding:4px 8px"><code>auto_assign_shift</code></td><td style="padding:4px 8px"><code>true</code></td><td style="padding:4px 8px">Habilitar auto-asignación semanal de turno basada en patrones de marcación</td></tr>
 
-                                <tr><td style="padding:4px 8px"><code>auto_assign_tolerance_minutes</code></td><td style="padding:4px 8px"><code>60</code></td><td style="padding:4px 8px">Ventana (±min) alrededor del inicio de turno para considerar match</td></tr>
+                                <tr><td style="padding:4px 8px"><code>auto_assign_tolerance_minutes</code></td><td style="padding:4px 8px"><code>30</code></td><td style="padding:4px 8px">Ventana (±min) alrededor del inicio de turno para considerar match de marcación</td></tr>
+
+                                <tr><td style="padding:4px 8px"><code>auto_assign_regularity_percent</code></td><td style="padding:4px 8px"><code>70</code></td><td style="padding:4px 8px">Porcentaje mínimo de días en la semana que deben coincidir con un turno para asignarlo</td></tr>
 
                                 <tr><td style="padding:4px 8px"><code>lunch_margin_minutes</code></td><td style="padding:4px 8px"><code>15</code></td><td style="padding:4px 8px">Margen (min) para detectar marcajes de almuerzo</td></tr>
 
@@ -2452,8 +2476,7 @@
 
                 <span>ℹ️</span>
 
-                <span><strong>Auto-asignación de turno:</strong> Si un empleado no tiene turno asignado y su hora de entrada coincide con el inicio de algún turno activo (± tolerancia configurable), se le asigna automáticamente.
-                    Controlado por los settings <code>auto_assign_shift</code> y <code>auto_assign_tolerance_minutes</code>.</span>
+                <span><strong>Auto-asignación de turno (semanal):</strong> Cuando se termina de procesar un batch de importación, el sistema analiza los <code>raw_logs</code> agrupando por empleado e ISO semana. Para cada semana, detecta qué turno activo coincide con la mayoría de las primeras marcaciones del empleado (± <code>auto_assign_tolerance_minutes</code>). Si la regularidad supera <code>auto_assign_regularity_percent</code>%, crea o actualiza la asignación de turno para esa semana. Controlado por los settings <code>auto_assign_shift</code>, <code>auto_assign_tolerance_minutes</code> y <code>auto_assign_regularity_percent</code>.</span>
 
             </div>
 
@@ -2797,11 +2820,23 @@ Content-Type: multipart/form-data</div>
 
                             <td class="param-name">auto_assign_tolerance_minutes</td>
 
-                            <td class="param-type"><code>60</code></td>
+                            <td class="param-type"><code>30</code></td>
 
                             <td class="param-type">attendance</td>
 
-                            <td class="param-desc">Ventana (± minutos) alrededor del inicio de turno para considerar match en la auto-asignación. Ej: con turno a las 07:00 y tolerancia 60, empleados que entren entre 06:00 y 08:00 serán asociados a ese turno.</td>
+                            <td class="param-desc">Ventana (± minutos) alrededor del inicio de turno para considerar match en la auto-asignación semanal. Ej: con turno a las 07:00 y tolerancia 30, primera marcación entre 06:30 y 07:30 cuenta como match.</td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td class="param-name">auto_assign_regularity_percent</td>
+
+                            <td class="param-type"><code>70</code></td>
+
+                            <td class="param-type">attendance</td>
+
+                            <td class="param-desc">Porcentaje mínimo de días en la semana donde la primera marcación debe coincidir con un turno para que se cree la asignación. Evita asignaciones erróneas por días atípicos.</td>
 
                         </tr>
 
@@ -2891,11 +2926,13 @@ Content-Type: multipart/form-data</div>
 
     <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"noise_window_minutes"</span>,          <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_shift"</span>,              <span class="key">"value"</span>: <span class="str">"true"</span>,  <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_shift"</span>,               <span class="key">"value"</span>: <span class="str">"true"</span>,  <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_tolerance_minutes"</span>,   <span class="key">"value"</span>: <span class="str">"60"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_tolerance_minutes"</span>,    <span class="key">"value"</span>: <span class="str">"30"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
-    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"lunch_margin_minutes"</span>,            <span class="key">"value"</span>: <span class="str">"15"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"auto_assign_regularity_percent"</span>,   <span class="key">"value"</span>: <span class="str">"70"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
+
+    <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"lunch_margin_minutes"</span>,             <span class="key">"value"</span>: <span class="str">"15"</span>,    <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 
     <span class="kw">{</span> <span class="key">"key"</span>: <span class="str">"diurnal_start_time"</span>,             <span class="key">"value"</span>: <span class="str">"06:00"</span>, <span class="key">"group"</span>: <span class="str">"attendance"</span> <span class="kw">}</span>,
 

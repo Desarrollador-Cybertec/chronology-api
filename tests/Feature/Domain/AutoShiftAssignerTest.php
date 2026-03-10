@@ -19,7 +19,6 @@ use App\Models\EmployeeShiftAssignment;
 use App\Models\ImportBatch;
 use App\Models\RawLog;
 use App\Models\Shift;
-use App\Models\SystemSetting;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -48,7 +47,6 @@ class AutoShiftAssignerTest extends TestCase
                 new LateCalculator,
                 new OvertimeCalculator,
             ),
-            new AutoShiftAssigner,
         );
     }
 
@@ -267,9 +265,9 @@ class AutoShiftAssignerTest extends TestCase
         ]);
     }
 
-    // ── Integration: AttendanceEngine with auto-assign ────────
+    // ── Integration: AttendanceEngine uses EmployeeShiftAssignment ──
 
-    public function test_engine_does_not_auto_assign_when_disabled(): void
+    public function test_engine_returns_null_shift_when_no_assignment_exists(): void
     {
         $employee = Employee::factory()->create();
         Shift::factory()->create([
@@ -295,17 +293,58 @@ class AutoShiftAssignerTest extends TestCase
             $logs,
             $employee->id,
             Carbon::parse('2026-01-15'),
-            60,
-            false,
         );
 
         $this->assertNull($result->shift);
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
-    // ── Integration: ProcessAttendanceDayJob with auto-assign ─
+    public function test_engine_uses_assignment_shift_when_it_exists(): void
+    {
+        $employee = Employee::factory()->create();
+        $shift = Shift::factory()->create([
+            'start_time' => '08:00',
+            'end_time' => '17:00',
+            'is_active' => true,
+            'tolerance_minutes' => 10,
+            'overtime_enabled' => false,
+        ]);
 
-    public function test_job_does_not_auto_assign_when_setting_disabled(): void
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+            'work_days' => [1, 2, 3, 4, 5],
+        ]);
+
+        $logs = collect([
+            RawLog::factory()->make([
+                'employee_id' => $employee->id,
+                'check_time' => '2026-01-15 08:05:00',
+                'date_reference' => '2026-01-15',
+            ]),
+            RawLog::factory()->make([
+                'employee_id' => $employee->id,
+                'check_time' => '2026-01-15 17:00:00',
+                'date_reference' => '2026-01-15',
+            ]),
+        ]);
+
+        $result = $this->engine->process(
+            $logs,
+            $employee->id,
+            Carbon::parse('2026-01-15'),
+        );
+
+        $this->assertNotNull($result->shift);
+        $this->assertEquals($shift->id, $result->shift->id);
+        $this->assertEquals('present', $result->status);
+    }
+
+    // ── Integration: ProcessAttendanceDayJob shift resolution ─
+
+    public function test_job_does_not_create_assignments(): void
     {
         $employee = Employee::factory()->create();
         Shift::factory()->create([
@@ -313,8 +352,6 @@ class AutoShiftAssignerTest extends TestCase
             'end_time' => '17:00',
             'is_active' => true,
         ]);
-
-        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'false']);
 
         $batch = ImportBatch::factory()->create();
         RawLog::factory()->create([
@@ -333,22 +370,30 @@ class AutoShiftAssignerTest extends TestCase
         $job = new ProcessAttendanceDayJob($employee->id, '2026-01-15');
         app()->call([$job, 'handle']);
 
-        $day = AttendanceDay::first();
+        // ProcessAttendanceDayJob never creates assignments;
+        // that responsibility belongs to AssignWeeklyShiftsJob.
         $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertDatabaseCount('attendance_days', 1);
     }
 
-    public function test_job_uses_custom_tolerance_from_settings(): void
+    public function test_job_uses_existing_assignment_for_calculations(): void
     {
         $employee = Employee::factory()->create();
-        Shift::factory()->create([
+        $shift = Shift::factory()->create([
             'start_time' => '08:00',
             'end_time' => '17:00',
+            'tolerance_minutes' => 10,
+            'overtime_enabled' => false,
             'is_active' => true,
         ]);
 
-        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
-        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '5']);
-        SystemSetting::query()->where('key', 'auto_assign_min_days')->update(['value' => '1']);
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shift->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+            'work_days' => [1, 2, 3, 4, 5],
+        ]);
 
         $batch = ImportBatch::factory()->create();
         RawLog::factory()->create([
@@ -367,9 +412,10 @@ class AutoShiftAssignerTest extends TestCase
         $job = new ProcessAttendanceDayJob($employee->id, '2026-01-15');
         app()->call([$job, 'handle']);
 
-        // Tolerance is only 5 min; 08:20 is 20 min away — should NOT match
+        // 08:20 is 20 min late (past 08:00 + 10 min tolerance)
         $day = AttendanceDay::first();
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
+        $this->assertEquals('present', $day->status);
+        $this->assertEquals(20, $day->late_minutes);
     }
 
     // ── Existing assignment guard tests ───────────────────────
@@ -762,35 +808,11 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
-    public function test_job_skips_assignment_for_irregular_employee(): void
+    public function test_job_calculates_attendance_without_shift_when_no_assignment(): void
     {
         $employee = Employee::factory()->create();
-        Shift::factory()->create([
-            'start_time' => '09:00',
-            'end_time' => '18:00',
-            'is_active' => true,
-        ]);
-
-        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
-        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '30']);
-        SystemSetting::query()->where('key', 'auto_assign_min_days')->update(['value' => '3']);
-        SystemSetting::query()->where('key', 'auto_assign_regularity_percent')->update(['value' => '70']);
 
         $batch = ImportBatch::factory()->create();
-
-        // Create scattered historical check-ins
-        $scatteredTimes = ['07:00', '12:30', '17:05'];
-        foreach ($scatteredTimes as $i => $time) {
-            $date = Carbon::parse('2026-01-15')->subDays($i + 1);
-            RawLog::factory()->create([
-                'employee_id' => $employee->id,
-                'import_batch_id' => $batch->id,
-                'check_time' => $date->copy()->setTimeFromTimeString($time),
-                'date_reference' => $date,
-            ]);
-        }
-
-        // Current day
         RawLog::factory()->create([
             'employee_id' => $employee->id,
             'import_batch_id' => $batch->id,
@@ -809,8 +831,11 @@ class AutoShiftAssignerTest extends TestCase
 
         $day = AttendanceDay::first();
         $this->assertNotNull($day);
+        $this->assertEquals('present', $day->status);
+        // No shift assigned — no late/overtime calculated
+        $this->assertEquals(0, $day->late_minutes);
+        $this->assertEquals(0, $day->overtime_minutes);
+        // No assignment should have been created by the job
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
-
 }
-

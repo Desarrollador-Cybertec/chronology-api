@@ -17,7 +17,7 @@ class CsvParser
             return ['headers' => [], 'rows' => []];
         }
 
-        $headers = str_getcsv(array_shift($lines));
+        $headers = str_getcsv(array_shift($lines), ',', '"', '');
         $headers = array_map('trim', $headers);
         $headers = array_map('strtolower', $headers);
 
@@ -29,7 +29,7 @@ class CsvParser
                 continue;
             }
 
-            $values = str_getcsv($line);
+            $values = str_getcsv($line, ',', '"', '');
 
             if (count($values) !== count($headers)) {
                 continue;
