@@ -40,11 +40,6 @@ class Shift extends Model
         return $this->hasMany(EmployeeShiftAssignment::class);
     }
 
-    public function attendanceDays(): HasMany
-    {
-        return $this->hasMany(AttendanceDay::class);
-    }
-
     public function breaks(): HasMany
     {
         return $this->hasMany(ShiftBreak::class)->orderBy('position');

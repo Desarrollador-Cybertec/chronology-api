@@ -14,7 +14,8 @@ class ProcessImportBatchJob implements ShouldQueue
     public function __construct(public ImportBatch $batch) {}
 
     /**
-     * Group raw_logs by employee_id + date_reference and dispatch
+     * Assign weekly shifts based on raw_log patterns, then group
+     * raw_logs by employee_id + date_reference and dispatch
      * a ProcessAttendanceDayJob for each group.
      */
     public function handle(): void
@@ -37,6 +38,9 @@ class ProcessImportBatchJob implements ShouldQueue
 
             return;
         }
+
+        // Assign weekly shifts before processing individual attendance days
+        AssignWeeklyShiftsJob::dispatchSync($this->batch);
 
         $this->batch->update([
             'status' => 'processing',

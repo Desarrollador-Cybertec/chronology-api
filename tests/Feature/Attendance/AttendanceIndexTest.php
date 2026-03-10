@@ -4,7 +4,6 @@ namespace Tests\Feature\Attendance;
 
 use App\Models\AttendanceDay;
 use App\Models\Employee;
-use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -17,15 +16,12 @@ class AttendanceIndexTest extends TestCase
 
     private Employee $employee;
 
-    private Shift $shift;
-
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->user = User::factory()->superadmin()->create();
         $this->employee = Employee::factory()->create();
-        $this->shift = Shift::factory()->create();
     }
 
     public function test_can_list_attendance_days(): void
@@ -38,7 +34,6 @@ class AttendanceIndexTest extends TestCase
             )
             ->create([
                 'employee_id' => $this->employee->id,
-                'shift_id' => $this->shift->id,
             ]);
 
         $response = $this->actingAs($this->user)->getJson('/api/attendance');
@@ -59,7 +54,6 @@ class AttendanceIndexTest extends TestCase
             )
             ->create([
                 'employee_id' => $this->employee->id,
-                'shift_id' => $this->shift->id,
             ]);
 
         $response = $this->actingAs($this->user)->getJson('/api/attendance?per_page=2');
@@ -73,11 +67,10 @@ class AttendanceIndexTest extends TestCase
             ]);
     }
 
-    public function test_includes_employee_and_shift_relations(): void
+    public function test_includes_employee_relation(): void
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
         ]);
 
         $response = $this->actingAs($this->user)->getJson('/api/attendance');
@@ -85,7 +78,7 @@ class AttendanceIndexTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    ['id', 'employee_id', 'employee' => ['id', 'first_name'], 'shift' => ['id', 'name']],
+                    ['id', 'employee_id', 'employee' => ['id', 'first_name']],
                 ],
             ]);
     }
@@ -96,12 +89,10 @@ class AttendanceIndexTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $emp2->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
 
@@ -117,12 +108,10 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
         ]);
 
@@ -137,17 +126,14 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-10',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-20',
         ]);
 
@@ -162,13 +148,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'status' => 'present',
         ]);
         AttendanceDay::factory()->absent()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
         ]);
 
@@ -184,13 +168,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'overtime_minutes' => 60,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'overtime_minutes' => 0,
         ]);
@@ -206,13 +188,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'late_minutes' => 15,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'late_minutes' => 0,
         ]);
@@ -235,11 +215,9 @@ class AttendanceIndexTest extends TestCase
             )
             ->create([
                 'employee_id' => $this->employee->id,
-                'shift_id' => $this->shift->id,
             ]);
         AttendanceDay::factory()->create([
             'employee_id' => $emp2->id,
-            'shift_id' => $this->shift->id,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -253,12 +231,10 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-02-15',
         ]);
 
@@ -275,17 +251,14 @@ class AttendanceIndexTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $emp2->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
         ]);
 
@@ -300,14 +273,12 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'status' => 'present',
         ]);
         $emp2 = Employee::factory()->create();
         AttendanceDay::factory()->absent()->create([
             'employee_id' => $emp2->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
 
@@ -331,7 +302,6 @@ class AttendanceIndexTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
         ]);
 
         $response = $this->actingAs($manager)->getJson('/api/attendance');
@@ -343,7 +313,6 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
 
@@ -357,8 +326,6 @@ class AttendanceIndexTest extends TestCase
                         'employee_id',
                         'employee',
                         'date_reference',
-                        'shift_id',
-                        'shift',
                         'first_check_in',
                         'last_check_out',
                         'worked_minutes',
@@ -380,19 +347,16 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'worked_minutes' => 540,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'worked_minutes' => 300,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-17',
             'worked_minutes' => 480,
         ]);
@@ -409,13 +373,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'overtime_minutes' => 30,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'overtime_minutes' => 120,
         ]);
@@ -433,13 +395,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'status' => 'present',
         ]);
         AttendanceDay::factory()->absent()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
         ]);
 
@@ -458,12 +418,10 @@ class AttendanceIndexTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $empZ->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $empA->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
 
@@ -479,12 +437,10 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-20',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-10',
         ]);
 
@@ -501,12 +457,10 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-10',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-20',
         ]);
 
@@ -523,12 +477,10 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-10',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-20',
         ]);
 
@@ -545,19 +497,16 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'late_minutes' => 5,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'late_minutes' => 30,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-17',
             'late_minutes' => 15,
         ]);
@@ -578,13 +527,11 @@ class AttendanceIndexTest extends TestCase
     {
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
             'worked_minutes' => 540,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-16',
             'worked_minutes' => 300,
         ]);
@@ -604,12 +551,10 @@ class AttendanceIndexTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $empZ->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $empA->id,
-            'shift_id' => $this->shift->id,
             'date_reference' => '2026-01-15',
         ]);
 

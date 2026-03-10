@@ -36,26 +36,18 @@ class ProcessAttendanceDayJob implements ShouldQueue
             ->get();
 
         $noiseWindow = (int) SystemSetting::getValue('noise_window_minutes', '60');
-        $autoAssign = SystemSetting::getValue('auto_assign_shift', 'true') === 'true';
-        $autoAssignTolerance = (int) SystemSetting::getValue('auto_assign_tolerance_minutes', '30');
         $diurnalStart = SystemSetting::getValue('diurnal_start_time', '06:00');
         $nocturnalStart = SystemSetting::getValue('nocturnal_start_time', '20:00');
         $lunchMargin = (int) SystemSetting::getValue('lunch_margin_minutes', '15');
-        $autoAssignMinDays = (int) SystemSetting::getValue('auto_assign_min_days', '3');
-        $autoAssignRegularity = (int) SystemSetting::getValue('auto_assign_regularity_percent', '70');
 
         $result = $engine->process(
             $rawLogs,
             $this->employeeId,
             $date,
             $noiseWindow,
-            $autoAssign,
-            $autoAssignTolerance,
             $diurnalStart,
             $nocturnalStart,
             $lunchMargin,
-            $autoAssignMinDays,
-            $autoAssignRegularity,
         );
 
         AttendanceDay::updateOrCreate(
@@ -64,7 +56,6 @@ class ProcessAttendanceDayJob implements ShouldQueue
                 'date_reference' => $date,
             ],
             [
-                'shift_id' => $result->shift?->id,
                 'first_check_in' => $result->firstCheck,
                 'last_check_out' => $result->lastCheck,
                 'worked_minutes' => $result->workedMinutes,

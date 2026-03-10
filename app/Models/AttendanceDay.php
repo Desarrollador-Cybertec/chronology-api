@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AttendanceDay extends Model
@@ -15,7 +14,6 @@ class AttendanceDay extends Model
     protected $fillable = [
         'employee_id',
         'date_reference',
-        'shift_id',
         'first_check_in',
         'last_check_out',
         'worked_minutes',
@@ -44,14 +42,9 @@ class AttendanceDay extends Model
         ];
     }
 
-    public function employee(): BelongsTo
+    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Employee::class);
-    }
-
-    public function shift(): BelongsTo
-    {
-        return $this->belongsTo(Shift::class);
     }
 
     public function edits(): HasMany

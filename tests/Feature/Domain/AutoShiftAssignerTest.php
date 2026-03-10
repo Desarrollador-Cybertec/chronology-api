@@ -269,48 +269,6 @@ class AutoShiftAssignerTest extends TestCase
 
     // ── Integration: AttendanceEngine with auto-assign ────────
 
-    public function test_engine_auto_assigns_when_enabled(): void
-    {
-        $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create([
-            'start_time' => '08:00',
-            'end_time' => '17:00',
-            'tolerance_minutes' => 10,
-            'is_active' => true,
-        ]);
-
-        $logs = collect([
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 08:05:00',
-                'date_reference' => '2026-01-15',
-            ]),
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 17:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-        ]);
-
-        $result = $this->engine->process(
-            $logs,
-            $employee->id,
-            Carbon::parse('2026-01-15'),
-            60,
-            true,
-            30,
-            autoAssignMinDays: 1,
-        );
-
-        $this->assertEquals('present', $result->status);
-        $this->assertNotNull($result->shift);
-        $this->assertEquals($shift->id, $result->shift->id);
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
-        ]);
-    }
-
     public function test_engine_does_not_auto_assign_when_disabled(): void
     {
         $employee = Employee::factory()->create();
@@ -345,136 +303,7 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
-    public function test_engine_skips_auto_assign_when_shift_already_assigned(): void
-    {
-        $employee = Employee::factory()->create();
-        $existing = Shift::factory()->create([
-            'name' => 'Existing',
-            'start_time' => '08:00',
-            'end_time' => '17:00',
-            'is_active' => true,
-        ]);
-
-        Shift::factory()->create([
-            'name' => 'Other',
-            'start_time' => '14:00',
-            'end_time' => '22:00',
-            'is_active' => true,
-        ]);
-
-        EmployeeShiftAssignment::factory()->create([
-            'employee_id' => $employee->id,
-            'shift_id' => $existing->id,
-            'effective_date' => '2026-01-01',
-        ]);
-
-        $logs = collect([
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 14:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 22:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-        ]);
-
-        $result = $this->engine->process(
-            $logs,
-            $employee->id,
-            Carbon::parse('2026-01-15'),
-            60,
-            true,
-            30,
-            autoAssignMinDays: 1,
-        );
-
-        $this->assertEquals($existing->id, $result->shift->id);
-        $this->assertDatabaseCount('employee_shift_assignments', 1);
-    }
-
-    public function test_engine_calculates_late_after_auto_assign(): void
-    {
-        $employee = Employee::factory()->create();
-        Shift::factory()->create([
-            'start_time' => '08:00',
-            'end_time' => '17:00',
-            'tolerance_minutes' => 10,
-            'is_active' => true,
-        ]);
-
-        $logs = collect([
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 08:25:00',
-                'date_reference' => '2026-01-15',
-            ]),
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 17:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-        ]);
-
-        $result = $this->engine->process(
-            $logs,
-            $employee->id,
-            Carbon::parse('2026-01-15'),
-            60,
-            true,
-            30,
-            autoAssignMinDays: 1,
-        );
-
-        $this->assertNotNull($result->shift);
-        $this->assertEquals(25, $result->lateMinutes);
-    }
-
     // ── Integration: ProcessAttendanceDayJob with auto-assign ─
-
-    public function test_job_auto_assigns_shift_using_system_settings(): void
-    {
-        $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create([
-            'start_time' => '08:00',
-            'end_time' => '17:00',
-            'tolerance_minutes' => 10,
-            'is_active' => true,
-        ]);
-
-        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
-        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '30']);
-        SystemSetting::query()->where('key', 'auto_assign_min_days')->update(['value' => '1']);
-
-        $batch = ImportBatch::factory()->create();
-        RawLog::factory()->create([
-            'employee_id' => $employee->id,
-            'import_batch_id' => $batch->id,
-            'check_time' => '2026-01-15 08:03:00',
-            'date_reference' => '2026-01-15',
-        ]);
-        RawLog::factory()->create([
-            'employee_id' => $employee->id,
-            'import_batch_id' => $batch->id,
-            'check_time' => '2026-01-15 17:00:00',
-            'date_reference' => '2026-01-15',
-        ]);
-
-        $job = new ProcessAttendanceDayJob($employee->id, '2026-01-15');
-        app()->call([$job, 'handle']);
-
-        $day = AttendanceDay::first();
-        $this->assertNotNull($day);
-        $this->assertEquals($shift->id, $day->shift_id);
-        $this->assertEquals('present', $day->status);
-
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
-        ]);
-    }
 
     public function test_job_does_not_auto_assign_when_setting_disabled(): void
     {
@@ -505,7 +334,6 @@ class AutoShiftAssignerTest extends TestCase
         app()->call([$job, 'handle']);
 
         $day = AttendanceDay::first();
-        $this->assertNull($day->shift_id);
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
@@ -541,7 +369,6 @@ class AutoShiftAssignerTest extends TestCase
 
         // Tolerance is only 5 min; 08:20 is 20 min away — should NOT match
         $day = AttendanceDay::first();
-        $this->assertNull($day->shift_id);
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
@@ -935,52 +762,6 @@ class AutoShiftAssignerTest extends TestCase
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
-    public function test_job_respects_min_days_and_regularity_settings(): void
-    {
-        $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create([
-            'start_time' => '09:00',
-            'end_time' => '18:00',
-            'is_active' => true,
-        ]);
-
-        SystemSetting::query()->where('key', 'auto_assign_shift')->update(['value' => 'true']);
-        SystemSetting::query()->where('key', 'auto_assign_tolerance_minutes')->update(['value' => '30']);
-        SystemSetting::query()->where('key', 'auto_assign_min_days')->update(['value' => '3']);
-        SystemSetting::query()->where('key', 'auto_assign_regularity_percent')->update(['value' => '70']);
-
-        $batch = ImportBatch::factory()->create();
-
-        // Create 3 historical days of consistent check-ins
-        $this->createHistoricalLogs($employee, '09:05', 3, '2026-01-15');
-
-        // Current day
-        RawLog::factory()->create([
-            'employee_id' => $employee->id,
-            'import_batch_id' => $batch->id,
-            'check_time' => '2026-01-15 09:03:00',
-            'date_reference' => '2026-01-15',
-        ]);
-        RawLog::factory()->create([
-            'employee_id' => $employee->id,
-            'import_batch_id' => $batch->id,
-            'check_time' => '2026-01-15 18:00:00',
-            'date_reference' => '2026-01-15',
-        ]);
-
-        $job = new ProcessAttendanceDayJob($employee->id, '2026-01-15');
-        app()->call([$job, 'handle']);
-
-        $day = AttendanceDay::first();
-        $this->assertNotNull($day);
-        $this->assertEquals($shift->id, $day->shift_id);
-
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
-        ]);
-    }
-
     public function test_job_skips_assignment_for_irregular_employee(): void
     {
         $employee = Employee::factory()->create();
@@ -1028,99 +809,8 @@ class AutoShiftAssignerTest extends TestCase
 
         $day = AttendanceDay::first();
         $this->assertNotNull($day);
-        $this->assertNull($day->shift_id);
         $this->assertDatabaseCount('employee_shift_assignments', 0);
     }
 
-    public function test_engine_regularity_with_historical_logs(): void
-    {
-        $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create([
-            'start_time' => '09:00',
-            'end_time' => '18:00',
-            'is_active' => true,
-        ]);
-
-        // Create consistent historical raw_logs in DB
-        $this->createHistoricalLogs($employee, '09:05', 4, '2026-01-15');
-
-        $logs = collect([
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 09:02:00',
-                'date_reference' => '2026-01-15',
-            ]),
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 18:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-        ]);
-
-        $result = $this->engine->process(
-            $logs,
-            $employee->id,
-            Carbon::parse('2026-01-15'),
-            60,
-            true,
-            30,
-            autoAssignMinDays: 3,
-        );
-
-        $this->assertNotNull($result->shift);
-        $this->assertEquals($shift->id, $result->shift->id);
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
-        ]);
-    }
-
-    public function test_engine_rejects_irregular_employee(): void
-    {
-        $employee = Employee::factory()->create();
-        Shift::factory()->create([
-            'start_time' => '09:00',
-            'end_time' => '18:00',
-            'is_active' => true,
-        ]);
-
-        // Create scattered historical raw_logs
-        $batch = ImportBatch::factory()->create();
-        $scatteredTimes = ['07:00', '12:30', '17:05', '10:45'];
-        foreach ($scatteredTimes as $i => $time) {
-            $date = Carbon::parse('2026-01-15')->subDays($i + 1);
-            RawLog::factory()->create([
-                'employee_id' => $employee->id,
-                'import_batch_id' => $batch->id,
-                'check_time' => $date->copy()->setTimeFromTimeString($time),
-                'date_reference' => $date,
-            ]);
-        }
-
-        $logs = collect([
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 15:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-            RawLog::factory()->make([
-                'employee_id' => $employee->id,
-                'check_time' => '2026-01-15 22:00:00',
-                'date_reference' => '2026-01-15',
-            ]),
-        ]);
-
-        $result = $this->engine->process(
-            $logs,
-            $employee->id,
-            Carbon::parse('2026-01-15'),
-            60,
-            true,
-            30,
-            autoAssignMinDays: 3,
-        );
-
-        $this->assertNull($result->shift);
-        $this->assertDatabaseCount('employee_shift_assignments', 0);
-    }
 }
+

@@ -34,14 +34,12 @@ class ModelRelationshipTest extends TestCase
     public function test_employee_has_attendance_days(): void
     {
         $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create();
 
         AttendanceDay::factory()->count(2)->sequence(
             ['date_reference' => now()->subDays(1)->toDateString()],
             ['date_reference' => now()->subDays(2)->toDateString()],
         )->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
         ]);
 
         $this->assertCount(2, $employee->refresh()->attendanceDays);
@@ -107,13 +105,6 @@ class ModelRelationshipTest extends TestCase
         $attendanceDay = AttendanceDay::factory()->create();
 
         $this->assertInstanceOf(Employee::class, $attendanceDay->employee);
-    }
-
-    public function test_attendance_day_belongs_to_shift(): void
-    {
-        $attendanceDay = AttendanceDay::factory()->create();
-
-        $this->assertInstanceOf(Shift::class, $attendanceDay->shift);
     }
 
     public function test_attendance_day_has_edits(): void

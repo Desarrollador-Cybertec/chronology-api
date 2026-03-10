@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Employee;
-use App\Models\Shift;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -23,7 +22,6 @@ class AttendanceDayFactory extends Factory
         return [
             'employee_id' => Employee::factory(),
             'date_reference' => $date->format('Y-m-d'),
-            'shift_id' => Shift::factory(),
             'first_check_in' => $date->format('Y-m-d').' 08:05:00',
             'last_check_out' => $date->format('Y-m-d').' 17:02:00',
             'worked_minutes' => 537,

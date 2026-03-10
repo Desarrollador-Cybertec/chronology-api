@@ -278,7 +278,6 @@ class EmployeeCrudTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
             'date_reference' => '2026-01-10',
             'status' => 'present',
             'worked_minutes' => 480,
@@ -291,7 +290,6 @@ class EmployeeCrudTest extends TestCase
 
         AttendanceDay::factory()->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
             'date_reference' => '2026-01-11',
             'status' => 'present',
             'worked_minutes' => 500,
@@ -304,7 +302,6 @@ class EmployeeCrudTest extends TestCase
 
         AttendanceDay::factory()->absent()->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
             'date_reference' => '2026-01-12',
         ]);
 

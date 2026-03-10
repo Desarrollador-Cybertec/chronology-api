@@ -69,7 +69,7 @@ class MigrationTest extends TestCase
     {
         $this->assertTrue(Schema::hasTable('attendance_days'));
         $this->assertTrue(Schema::hasColumns('attendance_days', [
-            'id', 'employee_id', 'date_reference', 'shift_id',
+            'id', 'employee_id', 'date_reference',
             'first_check_in', 'last_check_out', 'worked_minutes', 'overtime_minutes',
             'late_minutes', 'status', 'is_manually_edited', 'created_at', 'updated_at',
         ]));

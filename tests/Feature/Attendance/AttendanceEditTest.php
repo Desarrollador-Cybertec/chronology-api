@@ -5,7 +5,6 @@ namespace Tests\Feature\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\AttendanceEdit;
 use App\Models\Employee;
-use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,11 +23,9 @@ class AttendanceEditTest extends TestCase
 
         $this->superadmin = User::factory()->superadmin()->create();
         $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create();
 
         $this->day = AttendanceDay::factory()->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
             'date_reference' => '2026-01-15',
             'status' => 'present',
             'worked_minutes' => 540,
@@ -228,7 +225,7 @@ class AttendanceEditTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'id', 'employee', 'shift', 'edits',
+                    'id', 'employee', 'edits',
                 ],
                 'edits_created',
             ])

@@ -5,7 +5,6 @@ namespace Tests\Feature\Attendance;
 use App\Models\AttendanceDay;
 use App\Models\AttendanceEdit;
 use App\Models\Employee;
-use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -24,11 +23,9 @@ class AttendanceShowTest extends TestCase
 
         $this->user = User::factory()->superadmin()->create();
         $employee = Employee::factory()->create();
-        $shift = Shift::factory()->create();
 
         $this->day = AttendanceDay::factory()->create([
             'employee_id' => $employee->id,
-            'shift_id' => $shift->id,
             'date_reference' => '2026-01-15',
         ]);
     }
@@ -50,17 +47,6 @@ class AttendanceShowTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => ['employee' => ['id', 'first_name', 'last_name']],
-            ]);
-    }
-
-    public function test_includes_shift_relation(): void
-    {
-        $response = $this->actingAs($this->user)
-            ->getJson("/api/attendance/{$this->day->id}");
-
-        $response->assertOk()
-            ->assertJsonStructure([
-                'data' => ['shift' => ['id', 'name', 'start_time', 'end_time']],
             ]);
     }
 

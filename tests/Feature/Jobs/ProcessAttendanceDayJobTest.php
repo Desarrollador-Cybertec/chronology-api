@@ -69,7 +69,6 @@ class ProcessAttendanceDayJobTest extends TestCase
         $this->assertEquals($this->employee->id, $day->employee_id);
         $this->assertEquals('2026-01-15', $day->date_reference->format('Y-m-d'));
         $this->assertEquals('present', $day->status);
-        $this->assertEquals($this->shift->id, $day->shift_id);
     }
 
     public function test_calculates_worked_minutes(): void
@@ -125,7 +124,6 @@ class ProcessAttendanceDayJobTest extends TestCase
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'status' => 'absent',
             'worked_minutes' => 0,
         ]);

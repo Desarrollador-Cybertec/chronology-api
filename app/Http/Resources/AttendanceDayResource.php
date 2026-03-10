@@ -17,8 +17,6 @@ class AttendanceDayResource extends JsonResource
             'employee_id' => $this->employee_id,
             'employee' => new EmployeeResource($this->whenLoaded('employee')),
             'date_reference' => $this->date_reference?->toDateString(),
-            'shift_id' => $this->shift_id,
-            'shift' => new ShiftResource($this->whenLoaded('shift')),
             'first_check_in' => $this->first_check_in?->toDateTimeString(),
             'last_check_out' => $this->last_check_out?->toDateTimeString(),
             'worked_minutes' => $this->worked_minutes,

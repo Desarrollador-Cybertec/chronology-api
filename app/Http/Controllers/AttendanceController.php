@@ -34,7 +34,7 @@ class AttendanceController extends Controller
         $perPage = min($request->integer('per_page', 15), 100);
 
         $query = AttendanceDay::query()
-            ->with(['employee', 'shift']);
+            ->with(['employee']);
 
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->input('employee_id'));
@@ -78,7 +78,7 @@ class AttendanceController extends Controller
      */
     public function show(AttendanceDay $attendanceDay): AttendanceDayResource
     {
-        $attendanceDay->load(['employee', 'shift', 'edits.editedBy']);
+        $attendanceDay->load(['employee', 'edits.editedBy']);
 
         return new AttendanceDayResource($attendanceDay);
     }
@@ -91,7 +91,6 @@ class AttendanceController extends Controller
         $perPage = min($request->integer('per_page', 15), 100);
 
         $query = AttendanceDay::query()
-            ->with(['shift'])
             ->where('employee_id', $employee->id);
 
         if ($request->filled('date_from')) {
@@ -123,7 +122,7 @@ class AttendanceController extends Controller
         $perPage = min($request->integer('per_page', 15), 100);
 
         $query = AttendanceDay::query()
-            ->with(['employee', 'shift'])
+            ->with(['employee'])
             ->whereDate('date_reference', $date);
 
         if ($request->filled('status')) {
@@ -177,7 +176,7 @@ class AttendanceController extends Controller
             ]));
         }
 
-        $attendanceDay->load(['employee', 'shift', 'edits.editedBy']);
+        $attendanceDay->load(['employee', 'edits.editedBy']);
 
         return response()->json([
             'data' => new AttendanceDayResource($attendanceDay),

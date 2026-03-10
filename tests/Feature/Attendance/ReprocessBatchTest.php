@@ -7,7 +7,6 @@ use App\Models\AttendanceDay;
 use App\Models\Employee;
 use App\Models\ImportBatch;
 use App\Models\RawLog;
-use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
@@ -23,8 +22,6 @@ class ReprocessBatchTest extends TestCase
 
     private Employee $employee;
 
-    private Shift $shift;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,7 +29,6 @@ class ReprocessBatchTest extends TestCase
 
         $this->superadmin = User::factory()->superadmin()->create();
         $this->employee = Employee::factory()->create();
-        $this->shift = Shift::factory()->create();
 
         $this->batch = ImportBatch::factory()->completed()->create([
             'uploaded_by' => $this->superadmin->id,
@@ -70,7 +66,6 @@ class ReprocessBatchTest extends TestCase
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'is_manually_edited' => false,
         ]);
 
@@ -85,7 +80,6 @@ class ReprocessBatchTest extends TestCase
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'is_manually_edited' => true,
         ]);
 
@@ -120,7 +114,6 @@ class ReprocessBatchTest extends TestCase
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'is_manually_edited' => false,
         ]);
 
@@ -145,13 +138,11 @@ class ReprocessBatchTest extends TestCase
         AttendanceDay::factory()->create([
             'employee_id' => $this->employee->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'is_manually_edited' => false,
         ]);
         AttendanceDay::factory()->create([
             'employee_id' => $emp2->id,
             'date_reference' => '2026-01-15',
-            'shift_id' => $this->shift->id,
             'is_manually_edited' => false,
         ]);
 
