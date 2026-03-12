@@ -12,8 +12,8 @@ class LogReducer
      * Reduce noise from raw log entries.
      *
      * Groups consecutive punches within noiseWindowMinutes (compared
-     * against the first mark in each group) and keeps only the first
-     * mark from each group.
+     * against the first mark in each group) and keeps the first and
+     * last mark from each group.
      *
      * @param  Collection  $logs  Collection of RawLog models
      * @param  int  $noiseWindowMinutes  Minimum gap to consider a new event
@@ -28,6 +28,8 @@ class LogReducer
         $sorted = $logs->sortBy('check_time')->values();
         $result = collect();
         $groupAnchor = $sorted->first();
+        $groupLast = $groupAnchor;
+
         $result->push($groupAnchor);
 
         for ($i = 1; $i < $sorted->count(); $i++) {
@@ -35,9 +37,19 @@ class LogReducer
             $diffMinutes = (int) $groupAnchor->check_time->diffInMinutes($current->check_time);
 
             if ($diffMinutes >= $noiseWindowMinutes) {
+                if ($groupLast !== $groupAnchor) {
+                    $result->push($groupLast);
+                }
                 $groupAnchor = $current;
+                $groupLast = $current;
                 $result->push($groupAnchor);
+            } else {
+                $groupLast = $current;
             }
+        }
+
+        if ($groupLast !== $groupAnchor) {
+            $result->push($groupLast);
         }
 
         return $result->values();

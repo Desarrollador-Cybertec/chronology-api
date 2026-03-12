@@ -40,7 +40,7 @@ class AttendanceCalculator
             $lunchMinutes = $this->lunchAnalyzer->analyze($reducedLogs, $shift, $dateReference, $lunchMarginMinutes);
         }
 
-        $result = $this->workTimeCalculator->calculate($reducedLogs, $shift, $lunchMinutes);
+        $result = $this->workTimeCalculator->calculate($reducedLogs, $shift, $lunchMinutes, $dateReference);
         $result = $this->lateCalculator->calculate($result, $dateReference);
         $result = $this->overtimeCalculator->calculate($result, $dateReference, $diurnalStartTime, $nocturnalStartTime);
 
