@@ -36,13 +36,23 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->tokens()->count() > 0) {
+        $activeTokens = $user->tokens()
+            ->where(function ($query) {
+                $query->where('expires_at', '>', now())
+                    ->orWhereNull('expires_at');
+            })
+            ->count();
+
+        if ($activeTokens > 0) {
             return response()->json([
                 'message' => 'Este usuario ya tiene una sesión activa. Debe cerrar la sesión existente antes de iniciar una nueva.',
             ], 409);
         }
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $expirationMinutes = config('sanctum.expiration');
+        $expiresAt = $expirationMinutes ? now()->addMinutes($expirationMinutes) : null;
+
+        $token = $user->createToken('auth-token', expiresAt: $expiresAt)->plainTextToken;
 
         return response()->json([
             'user' => $user,

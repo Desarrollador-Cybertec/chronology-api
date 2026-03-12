@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Shift;
 
+use App\Models\EmployeeScheduleException;
+use App\Models\EmployeeShiftAssignment;
 use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -396,5 +398,38 @@ class ShiftCrudTest extends TestCase
         $this->actingAs($user)->deleteJson("/api/shifts/{$shift->id}");
 
         $this->assertDatabaseMissing('shift_breaks', ['shift_id' => $shift->id]);
+    }
+
+    public function test_superadmin_can_delete_shift_with_assignments(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shift = Shift::factory()->create();
+        EmployeeShiftAssignment::factory()->count(2)->create(['shift_id' => $shift->id]);
+
+        $this->assertSame(2, EmployeeShiftAssignment::where('shift_id', $shift->id)->count());
+
+        $response = $this->actingAs($user)->deleteJson("/api/shifts/{$shift->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('message', 'Turno eliminado correctamente.');
+
+        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $this->assertDatabaseMissing('employee_shift_assignments', ['shift_id' => $shift->id]);
+    }
+
+    public function test_superadmin_can_delete_shift_with_schedule_exceptions(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $shift = Shift::factory()->create();
+        $exception = EmployeeScheduleException::factory()->create(['shift_id' => $shift->id]);
+
+        $response = $this->actingAs($user)->deleteJson("/api/shifts/{$shift->id}");
+
+        $response->assertOk();
+        $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
+        $this->assertDatabaseHas('employee_schedule_exceptions', [
+            'id' => $exception->id,
+            'shift_id' => null,
+        ]);
     }
 }

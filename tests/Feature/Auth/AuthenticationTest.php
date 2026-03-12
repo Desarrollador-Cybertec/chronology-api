@@ -15,8 +15,8 @@ class AuthenticationTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'John Doe',
             'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1234',
+            'password_confirmation' => 'Password1234',
         ]);
 
         $response->assertStatus(201)
@@ -35,8 +35,8 @@ class AuthenticationTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'Sneaky User',
             'email' => 'sneaky@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1234',
+            'password_confirmation' => 'Password1234',
             'role' => 'superadmin',
         ]);
 
@@ -56,8 +56,8 @@ class AuthenticationTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'Duplicate',
             'email' => 'existing@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'Password1234',
+            'password_confirmation' => 'Password1234',
         ]);
 
         $response->assertStatus(422)
@@ -69,8 +69,8 @@ class AuthenticationTest extends TestCase
         $response = $this->postJson('/api/register', [
             'name' => 'Short Pass',
             'email' => 'short@example.com',
-            'password' => '123',
-            'password_confirmation' => '123',
+            'password' => 'Ab1234567',
+            'password_confirmation' => 'Ab1234567',
         ]);
 
         $response->assertStatus(422)
@@ -81,12 +81,12 @@ class AuthenticationTest extends TestCase
     {
         User::factory()->create([
             'email' => 'login@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response = $this->postJson('/api/login', [
             'email' => 'login@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response->assertOk()
@@ -97,12 +97,12 @@ class AuthenticationTest extends TestCase
     {
         User::factory()->create([
             'email' => 'wrong@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response = $this->postJson('/api/login', [
             'email' => 'wrong@example.com',
-            'password' => 'wrongpassword',
+            'password' => 'WrongPassword1',
         ]);
 
         $response->assertStatus(401)
@@ -113,7 +113,7 @@ class AuthenticationTest extends TestCase
     {
         $response = $this->postJson('/api/login', [
             'email' => 'nobody@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response->assertStatus(401);
@@ -150,18 +150,18 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'active@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response = $this->postJson('/api/login', [
             'email' => 'active@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
         $response->assertOk()->assertJsonStructure(['token']);
 
         $response = $this->postJson('/api/login', [
             'email' => 'active@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
         $response->assertStatus(409)
             ->assertJsonPath('message', 'Este usuario ya tiene una sesión activa. Debe cerrar la sesión existente antes de iniciar una nueva.');
@@ -171,12 +171,12 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create([
             'email' => 'relogin@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $response = $this->postJson('/api/login', [
             'email' => 'relogin@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
         $response->assertOk();
         $token = $response->json('token');
@@ -187,7 +187,7 @@ class AuthenticationTest extends TestCase
 
         $response = $this->postJson('/api/login', [
             'email' => 'relogin@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
         $response->assertOk()->assertJsonStructure(['token']);
     }
@@ -196,21 +196,82 @@ class AuthenticationTest extends TestCase
     {
         User::factory()->create([
             'email' => 'user1@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
         User::factory()->create([
             'email' => 'user2@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ]);
 
         $this->postJson('/api/login', [
             'email' => 'user1@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ])->assertOk();
 
         $this->postJson('/api/login', [
             'email' => 'user2@example.com',
-            'password' => 'password123',
+            'password' => 'Password1234',
         ])->assertOk();
+    }
+
+    public function test_registration_fails_with_weak_password(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'Weak Pass',
+            'email' => 'weak@example.com',
+            'password' => 'alllowercase',
+            'password_confirmation' => 'alllowercase',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+    }
+
+    public function test_registration_fails_without_mixed_case(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'No Upper',
+            'email' => 'noupper@example.com',
+            'password' => 'password1234',
+            'password_confirmation' => 'password1234',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+    }
+
+    public function test_registration_fails_without_numbers(): void
+    {
+        $response = $this->postJson('/api/register', [
+            'name' => 'No Numbers',
+            'email' => 'nonums@example.com',
+            'password' => 'PasswordOnly',
+            'password_confirmation' => 'PasswordOnly',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors('password');
+    }
+
+    public function test_login_rate_limited(): void
+    {
+        User::factory()->create([
+            'email' => 'rate@example.com',
+            'password' => 'Password1234',
+        ]);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->postJson('/api/login', [
+                'email' => 'rate@example.com',
+                'password' => 'WrongPassword1',
+            ]);
+        }
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'rate@example.com',
+            'password' => 'Password1234',
+        ]);
+
+        $response->assertStatus(429);
     }
 }

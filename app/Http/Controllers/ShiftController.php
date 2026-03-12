@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Shift\StoreShiftRequest;
 use App\Http\Requests\Shift\UpdateShiftRequest;
 use App\Http\Resources\ShiftResource;
+use App\Models\EmployeeScheduleException;
 use App\Models\Shift;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class ShiftController extends Controller
 {
@@ -71,7 +73,11 @@ class ShiftController extends Controller
 
     public function destroy(Shift $shift): JsonResponse
     {
-        $shift->delete();
+        DB::transaction(function () use ($shift) {
+            $shift->assignments()->delete();
+            EmployeeScheduleException::where('shift_id', $shift->id)->update(['shift_id' => null]);
+            $shift->delete();
+        });
 
         return response()->json(['message' => 'Turno eliminado correctamente.']);
     }
