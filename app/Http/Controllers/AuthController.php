@@ -36,6 +36,12 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if ($user->tokens()->count() > 0) {
+            return response()->json([
+                'message' => 'Este usuario ya tiene una sesión activa. Debe cerrar la sesión existente antes de iniciar una nueva.',
+            ], 409);
+        }
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return response()->json([

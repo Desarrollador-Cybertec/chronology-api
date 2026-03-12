@@ -145,4 +145,72 @@ class AuthenticationTest extends TestCase
 
         $response->assertStatus(401);
     }
+
+    public function test_login_blocked_when_user_has_active_session(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'active@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'active@example.com',
+            'password' => 'password123',
+        ]);
+        $response->assertOk()->assertJsonStructure(['token']);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'active@example.com',
+            'password' => 'password123',
+        ]);
+        $response->assertStatus(409)
+            ->assertJsonPath('message', 'Este usuario ya tiene una sesión activa. Debe cerrar la sesión existente antes de iniciar una nueva.');
+    }
+
+    public function test_login_allowed_after_logout(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'relogin@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'relogin@example.com',
+            'password' => 'password123',
+        ]);
+        $response->assertOk();
+        $token = $response->json('token');
+
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/logout')
+            ->assertOk();
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'relogin@example.com',
+            'password' => 'password123',
+        ]);
+        $response->assertOk()->assertJsonStructure(['token']);
+    }
+
+    public function test_different_users_can_login_simultaneously(): void
+    {
+        User::factory()->create([
+            'email' => 'user1@example.com',
+            'password' => 'password123',
+        ]);
+        User::factory()->create([
+            'email' => 'user2@example.com',
+            'password' => 'password123',
+        ]);
+
+        $this->postJson('/api/login', [
+            'email' => 'user1@example.com',
+            'password' => 'password123',
+        ])->assertOk();
+
+        $this->postJson('/api/login', [
+            'email' => 'user2@example.com',
+            'password' => 'password123',
+        ])->assertOk();
+    }
 }
