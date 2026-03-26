@@ -51,7 +51,16 @@ class WorkTimeCalculator
             }
         }
 
-        $workedMinutes = (int) $effectiveStart->diffInMinutes($lastCheck);
+        if ($effectiveStart->gt($lastCheck)) {
+            return new AttendanceResult(
+                firstCheck: $firstCheck,
+                lastCheck: $lastCheck,
+                status: 'incomplete',
+                shift: $shift,
+            );
+        }
+
+        $workedMinutes = max(0, (int) $effectiveStart->diffInMinutes($lastCheck));
 
         if ($lunchMinutes > 0) {
             $workedMinutes = max(0, $workedMinutes - $lunchMinutes);

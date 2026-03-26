@@ -154,4 +154,18 @@ class WorkTimeCalculatorTest extends TestCase
 
         $this->assertEquals(480, $result->workedMinutes);
     }
+
+    public function test_incomplete_when_all_marks_are_before_shift_start(): void
+    {
+        $shift = $this->makeShift(['start_time' => '08:00']);
+        $logs = collect([
+            new RawLog(['check_time' => '2026-01-15 07:38:04']),
+            new RawLog(['check_time' => '2026-01-15 07:38:23']),
+        ]);
+
+        $result = $this->calculator->calculate($logs, $shift, 0, Carbon::parse('2026-01-15'));
+
+        $this->assertEquals('incomplete', $result->status);
+        $this->assertEquals(0, $result->workedMinutes);
+    }
 }
