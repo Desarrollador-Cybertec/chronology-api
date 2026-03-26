@@ -571,4 +571,61 @@ class EmployeeCrudTest extends TestCase
         $this->assertContains('Bravo', $page2names);
         $this->assertContains('Delta', $page2names);
     }
+
+    public function test_superadmin_can_get_all_employee_ids(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->count(5)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees/all-ids');
+
+        $response->assertOk()
+            ->assertJsonPath('total', 5)
+            ->assertJsonStructure([
+                'data' => [['id', 'internal_id', 'full_name']],
+                'total',
+            ]);
+    }
+
+    public function test_manager_can_get_all_employee_ids(): void
+    {
+        $user = User::factory()->manager()->create();
+        Employee::factory()->count(3)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees/all-ids');
+
+        $response->assertOk()
+            ->assertJsonPath('total', 3);
+    }
+
+    public function test_all_ids_filters_by_active_only(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->count(3)->create(['is_active' => true]);
+        Employee::factory()->count(2)->create(['is_active' => false]);
+
+        $response = $this->actingAs($user)->getJson('/api/employees/all-ids?active_only=1');
+
+        $response->assertOk()
+            ->assertJsonPath('total', 3);
+    }
+
+    public function test_all_ids_filters_by_search(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        Employee::factory()->create(['first_name' => 'Unique', 'last_name' => 'Person']);
+        Employee::factory()->count(4)->create();
+
+        $response = $this->actingAs($user)->getJson('/api/employees/all-ids?search=Unique');
+
+        $response->assertOk()
+            ->assertJsonPath('total', 1);
+    }
+
+    public function test_unauthenticated_user_cannot_get_all_ids(): void
+    {
+        $response = $this->getJson('/api/employees/all-ids');
+
+        $response->assertStatus(401);
+    }
 }

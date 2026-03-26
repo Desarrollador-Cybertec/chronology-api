@@ -91,6 +91,36 @@ class EmployeeController extends Controller
         ]);
     }
 
+    public function allIds(Request $request): JsonResponse
+    {
+        $query = Employee::query()->select(['id', 'internal_id', 'first_name', 'last_name']);
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('internal_id', 'like', "%{$search}%")
+                    ->orWhere('department', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->boolean('active_only')) {
+            $query->where('is_active', true);
+        }
+
+        $employees = $query->orderBy('last_name')->orderBy('first_name')->get();
+
+        return response()->json([
+            'data' => $employees->map(fn (Employee $e) => [
+                'id' => $e->id,
+                'internal_id' => $e->internal_id,
+                'full_name' => $e->full_name,
+            ]),
+            'total' => $employees->count(),
+        ]);
+    }
+
     /**
      * @param  \Illuminate\Database\Eloquent\Builder<Employee>  $query
      */

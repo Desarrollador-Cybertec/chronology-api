@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |----------------------------------------------------------------------
     */
     Route::middleware('role:superadmin,manager')->group(function () {
+        Route::get('/employees/all-ids', [EmployeeController::class, 'allIds']);
         Route::apiResource('employees', EmployeeController::class)->only(['index', 'show']);
         Route::apiResource('shifts', ShiftController::class)->only(['index', 'show']);
         Route::get('/attendance', [AttendanceController::class, 'index']);
@@ -67,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Employee shift assignments (write)
         Route::post('/employee-shifts', [EmployeeShiftController::class, 'store']);
         Route::put('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'update']);
+        Route::delete('/employee-shifts', [EmployeeShiftController::class, 'destroyAll']);
         Route::delete('/employee-shifts/{employeeShift}', [EmployeeShiftController::class, 'destroy']);
 
         // System settings
