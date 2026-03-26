@@ -33,7 +33,9 @@ class ProcessAttendanceDayJob implements ShouldQueue
             ->where('employee_id', $this->employeeId)
             ->whereDate('date_reference', $date->toDateString())
             ->orderBy('check_time')
-            ->get();
+            ->get()
+            ->unique('check_time')
+            ->values();
 
         $noiseWindow = (int) SystemSetting::getValue('noise_window_minutes', '60');
         $diurnalStart = SystemSetting::getValue('diurnal_start_time', '06:00');

@@ -259,4 +259,39 @@ class ProcessAttendanceDayJobTest extends TestCase
         $this->assertEquals(0, $batch->processed_rows);
         $this->assertEquals('processing', $batch->status);
     }
+
+    public function test_deduplicates_raw_logs_with_same_check_time(): void
+    {
+        $batch1 = ImportBatch::factory()->create();
+        $batch2 = ImportBatch::factory()->create();
+
+        // Same check_time from two different batches
+        RawLog::factory()->create([
+            'employee_id' => $this->employee->id,
+            'import_batch_id' => $batch1->id,
+            'check_time' => '2026-01-15 08:00:00',
+            'date_reference' => '2026-01-15',
+        ]);
+        RawLog::factory()->create([
+            'employee_id' => $this->employee->id,
+            'import_batch_id' => $batch2->id,
+            'check_time' => '2026-01-15 08:00:00',
+            'date_reference' => '2026-01-15',
+        ]);
+        RawLog::factory()->create([
+            'employee_id' => $this->employee->id,
+            'import_batch_id' => $batch2->id,
+            'check_time' => '2026-01-15 17:00:00',
+            'date_reference' => '2026-01-15',
+        ]);
+
+        $job = new ProcessAttendanceDayJob($this->employee->id, '2026-01-15');
+        app()->call([$job, 'handle']);
+
+        $day = AttendanceDay::first();
+        $this->assertEquals('present', $day->status);
+        $this->assertEquals(540, $day->worked_minutes);
+        $this->assertEquals('2026-01-15 08:00:00', $day->first_check_in->format('Y-m-d H:i:s'));
+        $this->assertEquals('2026-01-15 17:00:00', $day->last_check_out->format('Y-m-d H:i:s'));
+    }
 }

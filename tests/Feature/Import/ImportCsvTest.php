@@ -339,4 +339,98 @@ class ImportCsvTest extends TestCase
             ->assertJsonPath('meta.current_page', 2)
             ->assertJsonCount(2, 'data');
     }
+
+    public function test_import_skips_duplicate_check_times_for_same_employee(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create(['internal_id' => '1001']);
+
+        // Pre-existing raw_log from a previous import
+        $oldBatch = ImportBatch::factory()->create(['uploaded_by' => $user->id]);
+        RawLog::factory()->create([
+            'employee_id' => $employee->id,
+            'import_batch_id' => $oldBatch->id,
+            'check_time' => '2026-01-15 08:05:00',
+            'date_reference' => '2026-01-15',
+        ]);
+
+        // New CSV with same check_time for same employee
+        $csv = implode("\n", [
+            'ID de persona,Nombre,Departamento,Hora,Estado de asistencia,Punto de verificación de asistencia,Nombre personalizado,Fuente de datos,Gestión de informe,Temperatura,Anormal',
+            "'1001,JUAN CARLOS PEREZ,InsummaBG,2026-01-15 08:05:00,Nada,Cafeteria Principal_Puerta1,-,Registro de deslizamiento de tarjeta,-,-,-",
+            "'1001,JUAN CARLOS PEREZ,InsummaBG,2026-01-15 17:02:00,Nada,Cafeteria Principal_Puerta1,-,Registro de deslizamiento de tarjeta,-,-,-",
+        ]);
+        $file = $this->uploadCsv($csv);
+
+        $this->actingAs($user)->postJson('/api/import', ['file' => $file]);
+
+        // 08:05:00 should NOT be duplicated; only 17:02:00 is new
+        $this->assertEquals(
+            2,
+            RawLog::where('employee_id', $employee->id)->count(),
+        );
+    }
+
+    public function test_import_cleans_old_raw_logs_for_overlapping_dates(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create(['internal_id' => '1001']);
+
+        // Old batch with a phantom mark at 14:24:10
+        $oldBatch = ImportBatch::factory()->create(['uploaded_by' => $user->id]);
+        RawLog::factory()->create([
+            'employee_id' => $employee->id,
+            'import_batch_id' => $oldBatch->id,
+            'check_time' => '2026-01-15 14:24:10',
+            'date_reference' => '2026-01-15',
+        ]);
+
+        // New CSV covering the same date with only one mark
+        $csv = implode("\n", [
+            'ID de persona,Nombre,Departamento,Hora,Estado de asistencia,Punto de verificación de asistencia,Nombre personalizado,Fuente de datos,Gestión de informe,Temperatura,Anormal',
+            "'1001,JUAN CARLOS PEREZ,InsummaBG,2026-01-15 15:58:48,Nada,Cafeteria Principal_Puerta1,-,Registro de deslizamiento de tarjeta,-,-,-",
+        ]);
+        $file = $this->uploadCsv($csv);
+
+        $response = $this->actingAs($user)->postJson('/api/import', ['file' => $file]);
+        $response->assertStatus(201);
+
+        // Old 14:24:10 mark should be removed; only 15:58:48 remains
+        $logs = RawLog::where('employee_id', $employee->id)->get();
+
+        $this->assertCount(1, $logs);
+        $this->assertEquals('2026-01-15 15:58:48', $logs->first()->check_time->format('Y-m-d H:i:s'));
+    }
+
+    public function test_import_preserves_raw_logs_for_non_overlapping_dates(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create(['internal_id' => '1001']);
+
+        // Old batch with a mark on Jan 14 (not covered by new CSV)
+        $oldBatch = ImportBatch::factory()->create(['uploaded_by' => $user->id]);
+        RawLog::factory()->create([
+            'employee_id' => $employee->id,
+            'import_batch_id' => $oldBatch->id,
+            'check_time' => '2026-01-14 08:00:00',
+            'date_reference' => '2026-01-14',
+        ]);
+
+        // New CSV covering only Jan 15
+        $csv = implode("\n", [
+            'ID de persona,Nombre,Departamento,Hora,Estado de asistencia,Punto de verificación de asistencia,Nombre personalizado,Fuente de datos,Gestión de informe,Temperatura,Anormal',
+            "'1001,JUAN CARLOS PEREZ,InsummaBG,2026-01-15 08:05:00,Nada,Cafeteria Principal_Puerta1,-,Registro de deslizamiento de tarjeta,-,-,-",
+        ]);
+        $file = $this->uploadCsv($csv);
+
+        $this->actingAs($user)->postJson('/api/import', ['file' => $file]);
+
+        // Jan 14 mark should still exist
+        $this->assertTrue(
+            RawLog::where('employee_id', $employee->id)
+                ->whereDate('date_reference', '2026-01-14')
+                ->exists(),
+        );
+        $this->assertEquals(2, RawLog::where('employee_id', $employee->id)->count());
+    }
 }

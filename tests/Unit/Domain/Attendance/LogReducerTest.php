@@ -177,4 +177,21 @@ class LogReducerTest extends TestCase
         $this->assertEquals('13:02', $result[5]->check_time->format('H:i'));
         $this->assertEquals('17:05', $result[6]->check_time->format('H:i'));
     }
+
+    public function test_laura_lagos_scenario_keeps_934_as_last(): void
+    {
+        $logs = collect([
+            new RawLog(['check_time' => '2026-02-12 08:05:15']),
+            new RawLog(['check_time' => '2026-02-12 09:08:19']),
+            new RawLog(['check_time' => '2026-02-12 09:10:00']),
+            new RawLog(['check_time' => '2026-02-12 09:34:00']),
+        ]);
+
+        $result = $this->reducer->reduce($logs);
+
+        $this->assertCount(3, $result);
+        $this->assertEquals('08:05', $result[0]->check_time->format('H:i'));
+        $this->assertEquals('09:08', $result[1]->check_time->format('H:i'));
+        $this->assertEquals('09:34', $result[2]->check_time->format('H:i'));
+    }
 }

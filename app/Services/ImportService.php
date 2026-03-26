@@ -82,14 +82,60 @@ class ImportService
     {
         $processedCount = 0;
         $failedCount = 0;
+        $duplicateCount = 0;
         $errors = [];
+
+        // Phase 1: Resolve employees and collect employee+date pairs for cleanup
+        $resolvedRows = [];
+        $employeeDatePairs = [];
 
         foreach ($normalizedRows as $row) {
             try {
                 $employee = $this->employeeResolver->resolve($row);
 
-                RawLog::create([
+                $resolvedRows[] = [
                     'employee_id' => $employee->id,
+                    'check_time' => $row['check_time'],
+                    'date_reference' => $row['date_reference'],
+                    'original_line' => $row['original_line'],
+                ];
+
+                $pairKey = $employee->id.'|'.$row['date_reference'];
+                $employeeDatePairs[$pairKey] = [
+                    'employee_id' => $employee->id,
+                    'date_reference' => $row['date_reference'],
+                ];
+            } catch (\Throwable $e) {
+                $failedCount++;
+                $errors[] = "Fila: {$row['original_line']} - Error: {$e->getMessage()}";
+            }
+        }
+
+        // Phase 2: Cleanup old raw_logs for overlapping employee+date pairs
+        foreach ($employeeDatePairs as $pair) {
+            RawLog::query()
+                ->where('employee_id', $pair['employee_id'])
+                ->whereDate('date_reference', $pair['date_reference'])
+                ->delete();
+        }
+
+        // Phase 3: Store new raw_logs (skip within-batch duplicates)
+        $seenCheckTimes = [];
+
+        foreach ($resolvedRows as $row) {
+            $dedupKey = $row['employee_id'].'|'.$row['check_time']->format('Y-m-d H:i:s');
+
+            if (isset($seenCheckTimes[$dedupKey])) {
+                $duplicateCount++;
+
+                continue;
+            }
+
+            $seenCheckTimes[$dedupKey] = true;
+
+            try {
+                RawLog::create([
+                    'employee_id' => $row['employee_id'],
                     'import_batch_id' => $batch->id,
                     'check_time' => $row['check_time'],
                     'date_reference' => $row['date_reference'],

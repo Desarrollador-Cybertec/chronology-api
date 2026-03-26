@@ -4,8 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\Shift;
 use App\Models\SystemSetting;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,6 +18,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // ── Users ────────────────────────────────────────────────
+        User::updateOrCreate(
+            ['email' => 'admin@chronology.test'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('test123'),
+                'role' => 'superadmin',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'manager@chronology.test'],
+            [
+                'name' => 'Manager User',
+                'password' => Hash::make('test123'),
+                'role' => 'manager',
+                'email_verified_at' => now(),
+            ]
+        );
+
         // ── Shifts ───────────────────────────────────────────────
         $horario1 = Shift::updateOrCreate(
             ['name' => 'Horario 1'],
@@ -61,15 +84,15 @@ class DatabaseSeeder extends Seeder
 
         // ── System settings ──────────────────────────────────────
         $settings = [
-            ['key' => 'noise_window_minutes', 'value' => '60', 'group' => 'attendance'],
-            ['key' => 'diurnal_start_time', 'value' => '06:00', 'group' => 'attendance'],
-            ['key' => 'nocturnal_start_time', 'value' => '20:00', 'group' => 'attendance'],
-            ['key' => 'auto_assign_shift', 'value' => 'true', 'group' => 'attendance'],
-            ['key' => 'auto_assign_tolerance_minutes', 'value' => '35', 'group' => 'attendance'],
-            ['key' => 'auto_assign_min_days', 'value' => '3', 'group' => 'attendance'],
-            ['key' => 'auto_assign_regularity_percent', 'value' => '70', 'group' => 'attendance'],
-            ['key' => 'lunch_margin_minutes', 'value' => '15', 'group' => 'attendance'],
-            ['key' => 'data_retention_months', 'value' => '2', 'group' => 'general'],
+            ['key' => 'noise_window_minutes',          'value' => '60',   'group' => 'attendance'],
+            ['key' => 'diurnal_start_time',             'value' => '06:00','group' => 'attendance'],
+            ['key' => 'nocturnal_start_time',           'value' => '20:00','group' => 'attendance'],
+            ['key' => 'auto_assign_shift',              'value' => 'true', 'group' => 'attendance'],
+            ['key' => 'auto_assign_tolerance_minutes',  'value' => '35',   'group' => 'attendance'],
+            ['key' => 'auto_assign_min_days',           'value' => '3',    'group' => 'attendance'],
+            ['key' => 'auto_assign_regularity_percent', 'value' => '70',   'group' => 'attendance'],
+            ['key' => 'lunch_margin_minutes',           'value' => '15',   'group' => 'attendance'],
+            ['key' => 'data_retention_months',          'value' => '2',    'group' => 'general'],
         ];
 
         foreach ($settings as $setting) {
