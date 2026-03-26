@@ -6,6 +6,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeScheduleExceptionController;
 use App\Http\Controllers\EmployeeShiftController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\SystemSettingController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/schedule-exceptions', [EmployeeScheduleExceptionController::class, 'store']);
         Route::post('/schedule-exceptions/batch', [EmployeeScheduleExceptionController::class, 'batch']);
         Route::delete('/schedule-exceptions/{scheduleException}', [EmployeeScheduleExceptionController::class, 'destroy']);
+
+        // Reports (read + create for both roles)
+        Route::get('/reports', [ReportController::class, 'index']);
+        Route::post('/reports', [ReportController::class, 'store']);
+        Route::get('/reports/{report}', [ReportController::class, 'show']);
+        Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
     });
 
     /*
