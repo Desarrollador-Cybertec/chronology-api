@@ -7,6 +7,7 @@ use App\Models\AttendanceDay;
 use App\Models\ImportBatch;
 use App\Models\RawLog;
 use App\Models\SystemSetting;
+use App\Services\LicenseService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -82,6 +83,12 @@ class ProcessAttendanceDayJob implements ShouldQueue
                         'status' => 'completed',
                         'processed_at' => now(),
                     ]);
+
+                    app(LicenseService::class)->reportUsage(
+                        'execution',
+                        1,
+                        'import_batch_'.$batch->id,
+                    );
                 }
             }
         }

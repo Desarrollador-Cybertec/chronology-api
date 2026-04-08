@@ -6,6 +6,7 @@ use App\Http\Requests\Report\StoreReportRequest;
 use App\Http\Resources\ReportResource;
 use App\Jobs\GenerateReportJob;
 use App\Models\Report;
+use App\Services\LicenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -33,8 +34,10 @@ class ReportController extends Controller
         return ReportResource::collection($reports);
     }
 
-    public function store(StoreReportRequest $request): JsonResponse
+    public function store(StoreReportRequest $request, LicenseService $license): JsonResponse
     {
+        $license->authorize('run_report', 1);
+
         $data = $request->validated();
         $data['generated_by'] = $request->user()->id;
         $data['status'] = 'pending';

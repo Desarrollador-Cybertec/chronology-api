@@ -7,6 +7,7 @@ use App\Actions\Import\ImportCsvAction;
 use App\Http\Requests\Import\StoreImportRequest;
 use App\Http\Resources\ImportBatchResource;
 use App\Models\ImportBatch;
+use App\Services\LicenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -26,8 +27,10 @@ class ImportController extends Controller
         return ImportBatchResource::collection($batches);
     }
 
-    public function store(StoreImportRequest $request, ImportCsvAction $action): JsonResponse
+    public function store(StoreImportRequest $request, ImportCsvAction $action, LicenseService $license): JsonResponse
     {
+        $license->authorize('run_import', 1);
+
         $result = $action->execute(
             $request->file('file'),
             $request->user(),
@@ -53,8 +56,10 @@ class ImportController extends Controller
         return new ImportBatchResource($importBatch);
     }
 
-    public function reprocess(ImportBatch $importBatch, ReprocessBatchAction $action): JsonResponse
+    public function reprocess(ImportBatch $importBatch, ReprocessBatchAction $action, LicenseService $license): JsonResponse
     {
+        $license->authorize('run_execution', 1);
+
         $result = $action->execute($importBatch);
 
         return response()->json([

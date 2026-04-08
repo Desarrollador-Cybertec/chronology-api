@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\AttendanceDay;
 use App\Models\Employee;
 use App\Models\Report;
+use App\Services\LicenseService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -29,6 +30,12 @@ class GenerateReportJob implements ShouldQueue
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);
+
+            app(LicenseService::class)->reportUsage(
+                'execution',
+                1,
+                'report_'.$this->report->id,
+            );
         } catch (\Throwable $e) {
             $this->report->update([
                 'status' => 'failed',

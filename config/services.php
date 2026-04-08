@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'subscription' => [
+        'api_url' => env('SUBSCRIPTION_API_URL'),
+        'api_key' => env('SUBSCRIPTION_API_KEY'),
+    ],
+
 ];

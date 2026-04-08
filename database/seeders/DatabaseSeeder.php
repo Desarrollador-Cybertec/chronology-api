@@ -23,7 +23,17 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@chronology.test'],
             [
                 'name' => 'Super Admin',
-                'password' => Hash::make('test123'),
+                'password' => Hash::make('Test123'),
+                'role' => 'superadmin',
+                'email_verified_at' => now(),
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'insumma.admin@chronology.test'],
+            [
+                'name' => 'Insumma Admin',
+                'password' => Hash::make('Test123'),
                 'role' => 'superadmin',
                 'email_verified_at' => now(),
             ]
@@ -33,7 +43,7 @@ class DatabaseSeeder extends Seeder
             ['email' => 'manager@chronology.test'],
             [
                 'name' => 'Manager User',
-                'password' => Hash::make('test123'),
+                'password' => Hash::make('Test123'),
                 'role' => 'manager',
                 'email_verified_at' => now(),
             ]
@@ -84,11 +94,11 @@ class DatabaseSeeder extends Seeder
 
         // ── System settings ──────────────────────────────────────
         $settings = [
-            ['key' => 'noise_window_minutes',          'value' => '60',   'group' => 'attendance'],
-            ['key' => 'diurnal_start_time',             'value' => '06:00','group' => 'attendance'],
-            ['key' => 'nocturnal_start_time',           'value' => '20:00','group' => 'attendance'],
+            ['key' => 'noise_window_minutes',          'value' => '30',   'group' => 'attendance'],
+            ['key' => 'diurnal_start_time',             'value' => '06:00', 'group' => 'attendance'],
+            ['key' => 'nocturnal_start_time',           'value' => '20:00', 'group' => 'attendance'],
             ['key' => 'auto_assign_shift',              'value' => 'true', 'group' => 'attendance'],
-            ['key' => 'auto_assign_tolerance_minutes',  'value' => '35',   'group' => 'attendance'],
+            ['key' => 'auto_assign_tolerance_minutes',  'value' => '25',   'group' => 'attendance'],
             ['key' => 'auto_assign_min_days',           'value' => '3',    'group' => 'attendance'],
             ['key' => 'auto_assign_regularity_percent', 'value' => '70',   'group' => 'attendance'],
             ['key' => 'lunch_margin_minutes',           'value' => '15',   'group' => 'attendance'],
