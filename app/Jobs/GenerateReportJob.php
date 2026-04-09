@@ -20,11 +20,14 @@ class GenerateReportJob implements ShouldQueue
         $this->report->update(['status' => 'processing']);
 
         try {
-            if ($this->report->type === 'individual') {
-                $this->generateIndividual();
-            } else {
-                $this->generateGeneral();
-            }
+            match ($this->report->type) {
+                'individual' => $this->generateIndividual(),
+                'general' => $this->generateGeneral(),
+                'tardanzas' => $this->generateTardanzas(),
+                'incompletas' => $this->generateIncompletas(),
+                'informe_total' => $this->generateInformeTotal(),
+                'horas_laborales' => $this->generateHorasLaborales(),
+            };
 
             $this->report->update([
                 'status' => 'completed',
@@ -134,6 +137,175 @@ class GenerateReportJob implements ShouldQueue
             'total_overtime_diurnal_minutes' => $days->sum('overtime_diurnal_minutes'),
             'total_overtime_nocturnal_minutes' => $days->sum('overtime_nocturnal_minutes'),
             'total_early_departure_minutes' => $days->sum('early_departure_minutes'),
+        ];
+
+        $this->report->update([
+            'summary' => $summary,
+            'rows' => $rows,
+        ]);
+    }
+
+    private function generateTardanzas(): void
+    {
+        $days = AttendanceDay::query()
+            ->with('employee')
+            ->whereBetween('date_reference', [
+                $this->report->date_from->toDateString(),
+                $this->report->date_to->toDateString(),
+            ])
+            ->where('late_minutes', '>', 0)
+            ->orderBy('date_reference')
+            ->orderBy('employee_id')
+            ->get();
+
+        $rows = $days->map(fn (AttendanceDay $day) => [
+            'employee_code' => $day->employee->internal_id,
+            'employee_name' => $day->employee->full_name,
+            'department' => $day->employee->department,
+            'date' => $day->date_reference->toDateString(),
+            'first_check_in' => $day->first_check_in?->format('H:i:s'),
+            'late_minutes' => $day->late_minutes,
+            'status' => $day->status,
+        ])->toArray();
+
+        $employeeIds = $days->pluck('employee_id')->unique();
+
+        $summary = [
+            'total_employees_with_tardanzas' => $employeeIds->count(),
+            'total_tardanzas' => $days->count(),
+            'total_late_minutes' => $days->sum('late_minutes'),
+        ];
+
+        $this->report->update([
+            'summary' => $summary,
+            'rows' => $rows,
+        ]);
+    }
+
+    private function generateIncompletas(): void
+    {
+        $days = AttendanceDay::query()
+            ->with('employee')
+            ->whereBetween('date_reference', [
+                $this->report->date_from->toDateString(),
+                $this->report->date_to->toDateString(),
+            ])
+            ->where('status', 'incomplete')
+            ->orderBy('date_reference')
+            ->orderBy('employee_id')
+            ->get();
+
+        $rows = $days->map(fn (AttendanceDay $day) => [
+            'employee_code' => $day->employee->internal_id,
+            'employee_name' => $day->employee->full_name,
+            'department' => $day->employee->department,
+            'date' => $day->date_reference->toDateString(),
+            'first_check_in' => $day->first_check_in?->format('H:i:s'),
+            'last_check_out' => $day->last_check_out?->format('H:i:s'),
+            'worked_minutes' => $day->worked_minutes,
+        ])->toArray();
+
+        $employeeIds = $days->pluck('employee_id')->unique();
+
+        $summary = [
+            'total_employees_with_incompletas' => $employeeIds->count(),
+            'total_incompletas' => $days->count(),
+            'total_worked_minutes' => $days->sum('worked_minutes'),
+        ];
+
+        $this->report->update([
+            'summary' => $summary,
+            'rows' => $rows,
+        ]);
+    }
+
+    private function generateInformeTotal(): void
+    {
+        $days = AttendanceDay::query()
+            ->with('employee')
+            ->whereBetween('date_reference', [
+                $this->report->date_from->toDateString(),
+                $this->report->date_to->toDateString(),
+            ])
+            ->where(function ($query): void {
+                $query->where('late_minutes', '>', 0)
+                    ->orWhere('early_departure_minutes', '>', 0)
+                    ->orWhere('status', 'incomplete');
+            })
+            ->orderBy('date_reference')
+            ->orderBy('employee_id')
+            ->get();
+
+        $rows = $days->map(fn (AttendanceDay $day) => [
+            'employee_code' => $day->employee->internal_id,
+            'employee_name' => $day->employee->full_name,
+            'department' => $day->employee->department,
+            'date' => $day->date_reference->toDateString(),
+            'first_check_in' => $day->first_check_in?->format('H:i:s'),
+            'last_check_out' => $day->last_check_out?->format('H:i:s'),
+            'late_minutes' => $day->late_minutes,
+            'early_departure_minutes' => $day->early_departure_minutes,
+            'worked_minutes' => $day->worked_minutes,
+            'status' => $day->status,
+        ])->toArray();
+
+        $employeeIds = $days->pluck('employee_id')->unique();
+
+        $summary = [
+            'total_employees_affected' => $employeeIds->count(),
+            'total_records' => $days->count(),
+            'total_tardanzas' => $days->where('late_minutes', '>', 0)->count(),
+            'total_salidas_temprano' => $days->where('early_departure_minutes', '>', 0)->count(),
+            'total_incompletas' => $days->where('status', 'incomplete')->count(),
+            'total_late_minutes' => $days->sum('late_minutes'),
+            'total_early_departure_minutes' => $days->sum('early_departure_minutes'),
+        ];
+
+        $this->report->update([
+            'summary' => $summary,
+            'rows' => $rows,
+        ]);
+    }
+
+    private function generateHorasLaborales(): void
+    {
+        $allDays = AttendanceDay::query()
+            ->with('employee')
+            ->whereBetween('date_reference', [
+                $this->report->date_from->toDateString(),
+                $this->report->date_to->toDateString(),
+            ])
+            ->get();
+
+        $grouped = $allDays->groupBy('employee_id');
+
+        $rows = $grouped->map(function ($days) {
+            $employee = $days->first()->employee;
+
+            return [
+                'employee_code' => $employee->internal_id,
+                'employee_name' => $employee->full_name,
+                'department' => $employee->department,
+                'days_present' => $days->where('status', 'present')->count(),
+                'days_absent' => $days->where('status', 'absent')->count(),
+                'days_incomplete' => $days->where('status', 'incomplete')->count(),
+                'total_worked_minutes' => $days->sum('worked_minutes'),
+                'total_overtime_minutes' => $days->sum('overtime_minutes'),
+                'total_overtime_diurnal_minutes' => $days->sum('overtime_diurnal_minutes'),
+                'total_overtime_nocturnal_minutes' => $days->sum('overtime_nocturnal_minutes'),
+                'total_late_minutes' => $days->sum('late_minutes'),
+                'total_early_departure_minutes' => $days->sum('early_departure_minutes'),
+            ];
+        })->sortBy('employee_name')->values()->toArray();
+
+        $summary = [
+            'total_employees' => $grouped->count(),
+            'total_worked_minutes' => $allDays->sum('worked_minutes'),
+            'total_overtime_minutes' => $allDays->sum('overtime_minutes'),
+            'total_overtime_diurnal_minutes' => $allDays->sum('overtime_diurnal_minutes'),
+            'total_overtime_nocturnal_minutes' => $allDays->sum('overtime_nocturnal_minutes'),
+            'total_late_minutes' => $allDays->sum('late_minutes'),
+            'total_early_departure_minutes' => $allDays->sum('early_departure_minutes'),
         ];
 
         $this->report->update([

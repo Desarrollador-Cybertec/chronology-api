@@ -17,6 +17,18 @@ class AssignWeeklyShiftsJobTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        SystemSetting::insert([
+            ['key' => 'auto_assign_shift', 'value' => 'true'],
+            ['key' => 'auto_assign_tolerance_minutes', 'value' => '30'],
+            ['key' => 'auto_assign_regularity_percent', 'value' => '70'],
+            ['key' => 'auto_assign_min_days', 'value' => '3'],
+        ]);
+    }
+
     private function createWeekLogs(
         Employee $employee,
         ImportBatch $batch,

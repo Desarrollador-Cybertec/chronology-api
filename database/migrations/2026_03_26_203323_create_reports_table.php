@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('generated_by')->constrained('users');
             $table->foreignId('employee_id')->nullable()->constrained('employees');
-            $table->enum('type', ['individual', 'general']);
+            $table->enum('type', ['individual', 'general', 'tardanzas', 'incompletas', 'informe_total']);
             $table->date('date_from');
             $table->date('date_to');
             $table->enum('status', ['pending', 'processing', 'completed', 'failed'])->default('pending');

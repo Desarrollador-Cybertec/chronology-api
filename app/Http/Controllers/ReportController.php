@@ -42,7 +42,7 @@ class ReportController extends Controller
         $data['generated_by'] = $request->user()->id;
         $data['status'] = 'pending';
 
-        if ($data['type'] === 'general') {
+        if (in_array($data['type'], ['general', 'tardanzas', 'incompletas', 'informe_total', 'horas_laborales'])) {
             $data['employee_id'] = null;
         }
 

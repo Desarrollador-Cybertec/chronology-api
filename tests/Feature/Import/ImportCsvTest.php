@@ -7,8 +7,10 @@ use App\Models\Employee;
 use App\Models\ImportBatch;
 use App\Models\RawLog;
 use App\Models\User;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -17,13 +19,29 @@ class ImportCsvTest extends TestCase
 {
     use RefreshDatabase;
 
-    private \Illuminate\Filesystem\FilesystemAdapter $fakeDisk;
+    private FilesystemAdapter $fakeDisk;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->fakeDisk = Storage::fake('csv_imports');
         Queue::fake();
+
+        config([
+            'services.subscription.api_url' => 'https://managed.cyberteconline.com',
+            'services.subscription.api_key' => 'test-api-key',
+        ]);
+
+        Http::fake([
+            'managed.cyberteconline.com/api/internal/authorize' => Http::response([
+                'allowed' => true,
+                'remaining' => 10,
+                'limit' => 100,
+                'current' => 90,
+                'status' => 'active',
+            ], 200),
+            'managed.cyberteconline.com/api/internal/usage' => Http::response(['recorded' => true], 200),
+        ]);
     }
 
     private function validCsvContent(): string
@@ -275,7 +293,7 @@ class ImportCsvTest extends TestCase
         $this->assertFileExists($csvPath, 'CSV real del biúmétrico no encontrado.');
 
         $user = User::factory()->superadmin()->create();
-        $file = new \Illuminate\Http\UploadedFile(
+        $file = new UploadedFile(
             $csvPath,
             'Informe de los registros originales.csv',
             'text/plain',
@@ -294,9 +312,9 @@ class ImportCsvTest extends TestCase
         $this->assertEquals(0, $batch->failed_rows);
         $this->assertNull($batch->errors);
 
-        $this->assertGreaterThan(0, \App\Models\Employee::count());
-        $this->assertGreaterThan(0, \App\Models\RawLog::count());
-        $this->assertEquals($batch->total_rows, \App\Models\RawLog::count());
+        $this->assertGreaterThan(0, Employee::count());
+        $this->assertGreaterThan(0, RawLog::count());
+        $this->assertEquals($batch->total_rows, RawLog::count());
     }
 
     public function test_import_index_returns_pagination_meta(): void

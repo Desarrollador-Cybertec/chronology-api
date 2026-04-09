@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ReportFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Report extends Model
 {
-    /** @use HasFactory<\Database\Factories\ReportFactory> */
+    /** @use HasFactory<ReportFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -42,15 +43,20 @@ class Report extends Model
             get: function (): string {
                 $range = $this->date_from->toDateString().' / '.$this->date_to->toDateString();
 
-                if ($this->type === 'individual') {
-                    $employeeName = $this->relationLoaded('employee') && $this->employee
-                        ? $this->employee->full_name
-                        : ($this->summary['employee_name'] ?? 'Empleado');
-
-                    return "{$employeeName} {$range}";
-                }
-
-                return "Reporte general {$range}";
+                return match ($this->type) {
+                    'individual' => sprintf(
+                        '%s %s',
+                        ($this->relationLoaded('employee') && $this->employee
+                            ? $this->employee->full_name
+                            : ($this->summary['employee_name'] ?? 'Empleado')),
+                        $range
+                    ),
+                    'tardanzas' => "Reporte de tardanzas {$range}",
+                    'incompletas' => "Reporte de marcaciones incompletas {$range}",
+                    'informe_total' => "Informe total de novedades {$range}",
+                    'horas_laborales' => "Reporte de horas laborales {$range}",
+                    default => "Reporte general {$range}",
+                };
             },
         );
     }

@@ -9,6 +9,7 @@ use App\Models\ImportBatch;
 use App\Models\RawLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -26,6 +27,22 @@ class ReprocessBatchTest extends TestCase
     {
         parent::setUp();
         Queue::fake();
+
+        config([
+            'services.subscription.api_url' => 'https://managed.cyberteconline.com',
+            'services.subscription.api_key' => 'test-api-key',
+        ]);
+
+        Http::fake([
+            'managed.cyberteconline.com/api/internal/authorize' => Http::response([
+                'allowed' => true,
+                'remaining' => 10,
+                'limit' => 100,
+                'current' => 90,
+                'status' => 'active',
+            ], 200),
+            'managed.cyberteconline.com/api/internal/usage' => Http::response(['recorded' => true], 200),
+        ]);
 
         $this->superadmin = User::factory()->superadmin()->create();
         $this->employee = Employee::factory()->create();
