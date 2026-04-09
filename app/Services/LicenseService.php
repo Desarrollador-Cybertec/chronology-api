@@ -28,21 +28,29 @@ class LicenseService
      * @throws LicenseException
      * @throws LicenseSystemUnavailableException
      */
-    public function authorize(string $action, int $quantity = 1): array
+    public function authorize(string $action, int $quantity = 1, bool $consume = false, ?string $referenceId = null): array
     {
         Log::info('Subscription: authorizing action', [
             'action' => $action,
             'quantity' => $quantity,
+            'consume' => $consume,
         ]);
+
+        $payload = [
+            'action' => $action,
+            'quantity' => $quantity,
+            'consume' => $consume,
+        ];
+
+        if ($referenceId !== null) {
+            $payload['reference_id'] = $referenceId;
+        }
 
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
                 'Accept' => 'application/json',
-            ])->post("{$this->apiUrl}/api/internal/authorize", [
-                'action' => $action,
-                'quantity' => $quantity,
-            ]);
+            ])->post("{$this->apiUrl}/api/internal/authorize", $payload);
         } catch (ConnectionException $e) {
             Log::error('Subscription: system unavailable', ['error' => $e->getMessage()]);
 

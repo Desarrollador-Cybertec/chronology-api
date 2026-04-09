@@ -46,7 +46,47 @@ class LicenseServiceTest extends TestCase
             return $request->url() === 'https://managed.cyberteconline.com/api/internal/authorize'
                 && $request['action'] === 'run_execution'
                 && $request['quantity'] === 1
+                && $request['consume'] === false
                 && $request->hasHeader('X-API-Key', 'test-api-key');
+        });
+    }
+
+    public function test_authorize_sends_consume_true_when_specified(): void
+    {
+        Http::fake([
+            'managed.cyberteconline.com/api/internal/authorize' => Http::response([
+                'allowed' => true,
+                'remaining' => 10,
+                'status' => 'active',
+            ], 200),
+        ]);
+
+        $service = new LicenseService;
+        $service->authorize('run_execution', 1, true, 'reprocess_42');
+
+        Http::assertSent(function ($request) {
+            return $request['action'] === 'run_execution'
+                && $request['consume'] === true
+                && $request['reference_id'] === 'reprocess_42';
+        });
+    }
+
+    public function test_authorize_omits_reference_id_when_null(): void
+    {
+        Http::fake([
+            'managed.cyberteconline.com/api/internal/authorize' => Http::response([
+                'allowed' => true,
+                'remaining' => 10,
+                'status' => 'active',
+            ], 200),
+        ]);
+
+        $service = new LicenseService;
+        $service->authorize('run_execution', 1, true);
+
+        Http::assertSent(function ($request) {
+            return $request['consume'] === true
+                && ! isset($request['reference_id']);
         });
     }
 

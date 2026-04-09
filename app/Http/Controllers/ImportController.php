@@ -11,6 +11,7 @@ use App\Services\LicenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Str;
 
 class ImportController extends Controller
 {
@@ -29,7 +30,7 @@ class ImportController extends Controller
 
     public function store(StoreImportRequest $request, ImportCsvAction $action, LicenseService $license): JsonResponse
     {
-        $license->authorize('run_import', 1);
+        $license->authorize('run_import', 1, true, 'import_'.Str::uuid());
 
         $result = $action->execute(
             $request->file('file'),
@@ -58,7 +59,7 @@ class ImportController extends Controller
 
     public function reprocess(ImportBatch $importBatch, ReprocessBatchAction $action, LicenseService $license): JsonResponse
     {
-        $license->authorize('run_execution', 1);
+        $license->authorize('run_execution', 1, true, 'reprocess_'.$importBatch->id);
 
         $result = $action->execute($importBatch);
 

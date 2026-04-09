@@ -10,6 +10,7 @@ use App\Services\LicenseService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Str;
 
 class ReportController extends Controller
 {
@@ -36,7 +37,7 @@ class ReportController extends Controller
 
     public function store(StoreReportRequest $request, LicenseService $license): JsonResponse
     {
-        $license->authorize('run_report', 1);
+        $license->authorize('run_report', 1, true, 'report_'.Str::uuid());
 
         $data = $request->validated();
         $data['generated_by'] = $request->user()->id;
