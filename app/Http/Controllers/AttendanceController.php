@@ -7,6 +7,8 @@ use App\Http\Resources\AttendanceDayResource;
 use App\Models\AttendanceDay;
 use App\Models\AttendanceEdit;
 use App\Models\Employee;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -139,6 +141,22 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Return the min and max processed date_reference in attendance_days.
+     */
+    public function dateRange(): JsonResponse
+    {
+        $min = AttendanceDay::query()->min('date_reference');
+        $max = AttendanceDay::query()->max('date_reference');
+
+        return response()->json([
+            'data' => [
+                'min_date' => $min ? Carbon::parse($min)->toDateString() : null,
+                'max_date' => $max ? Carbon::parse($max)->toDateString() : null,
+            ],
+        ]);
+    }
+
+    /**
      * Manually edit an attendance day. Logs each field change in attendance_edits.
      */
     public function update(UpdateAttendanceDayRequest $request, AttendanceDay $attendanceDay): JsonResponse
@@ -185,7 +203,7 @@ class AttendanceController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<AttendanceDay>  $query
+     * @param  Builder<AttendanceDay>  $query
      */
     private function applySorting($query, Request $request): void
     {
