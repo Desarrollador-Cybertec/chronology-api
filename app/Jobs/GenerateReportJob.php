@@ -286,26 +286,14 @@ class GenerateReportJob implements ShouldQueue
                 'employee_code' => $employee->internal_id,
                 'employee_name' => $employee->full_name,
                 'department' => $employee->department,
-                'days_present' => $days->where('status', 'present')->count(),
-                'days_absent' => $days->where('status', 'absent')->count(),
-                'days_incomplete' => $days->where('status', 'incomplete')->count(),
+                'days_worked' => $days->where('status', 'present')->count(),
                 'total_worked_minutes' => $days->sum('worked_minutes'),
-                'total_overtime_minutes' => $days->sum('overtime_minutes'),
-                'total_overtime_diurnal_minutes' => $days->sum('overtime_diurnal_minutes'),
-                'total_overtime_nocturnal_minutes' => $days->sum('overtime_nocturnal_minutes'),
-                'total_late_minutes' => $days->sum('late_minutes'),
-                'total_early_departure_minutes' => $days->sum('early_departure_minutes'),
             ];
         })->sortBy('employee_name')->values()->toArray();
 
         $summary = [
             'total_employees' => $grouped->count(),
             'total_worked_minutes' => $allDays->sum('worked_minutes'),
-            'total_overtime_minutes' => $allDays->sum('overtime_minutes'),
-            'total_overtime_diurnal_minutes' => $allDays->sum('overtime_diurnal_minutes'),
-            'total_overtime_nocturnal_minutes' => $allDays->sum('overtime_nocturnal_minutes'),
-            'total_late_minutes' => $allDays->sum('late_minutes'),
-            'total_early_departure_minutes' => $allDays->sum('early_departure_minutes'),
         ];
 
         $this->report->update([

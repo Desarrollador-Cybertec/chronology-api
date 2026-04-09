@@ -724,27 +724,16 @@ class ReportTest extends TestCase
         // Summary totals
         $this->assertEquals(2, $report->summary['total_employees']);
         $this->assertEquals(780, $report->summary['total_worked_minutes']);
-        $this->assertEquals(60, $report->summary['total_overtime_minutes']);
-        $this->assertEquals(60, $report->summary['total_overtime_diurnal_minutes']);
-        $this->assertEquals(0, $report->summary['total_overtime_nocturnal_minutes']);
-        $this->assertEquals(10, $report->summary['total_late_minutes']);
-        $this->assertEquals(20, $report->summary['total_early_departure_minutes']);
 
-        // Per-employee row for employee1
+        // Per-employee row for employee1 — 1 present day
         $row1 = collect($report->rows)->firstWhere('employee_code', $employee1->internal_id);
-        $this->assertEquals(1, $row1['days_present']);
-        $this->assertEquals(1, $row1['days_absent']);
-        $this->assertEquals(0, $row1['days_incomplete']);
+        $this->assertEquals(1, $row1['days_worked']);
         $this->assertEquals(480, $row1['total_worked_minutes']);
-        $this->assertEquals(60, $row1['total_overtime_minutes']);
-        $this->assertEquals(10, $row1['total_late_minutes']);
 
-        // Per-employee row for employee2
+        // Per-employee row for employee2 — incomplete day, so days_worked = 0
         $row2 = collect($report->rows)->firstWhere('employee_code', $employee2->internal_id);
-        $this->assertEquals(0, $row2['days_present']);
-        $this->assertEquals(1, $row2['days_incomplete']);
+        $this->assertEquals(0, $row2['days_worked']);
         $this->assertEquals(300, $row2['total_worked_minutes']);
-        $this->assertEquals(20, $row2['total_early_departure_minutes']);
     }
 
     public function test_horas_laborales_excludes_days_outside_range(): void
