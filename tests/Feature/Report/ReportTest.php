@@ -725,14 +725,18 @@ class ReportTest extends TestCase
         $this->assertEquals(2, $report->summary['total_employees']);
         $this->assertEquals(780, $report->summary['total_worked_minutes']);
 
-        // Per-employee row for employee1 — 1 present day
+        // Per-employee row for employee1 — 1 present day, 1 absent
         $row1 = collect($report->rows)->firstWhere('employee_code', $employee1->internal_id);
         $this->assertEquals(1, $row1['days_worked']);
+        $this->assertEquals(1, $row1['days_absent']);
+        $this->assertEquals(0, $row1['days_incomplete']);
         $this->assertEquals(480, $row1['total_worked_minutes']);
 
         // Per-employee row for employee2 — incomplete day, so days_worked = 0
         $row2 = collect($report->rows)->firstWhere('employee_code', $employee2->internal_id);
         $this->assertEquals(0, $row2['days_worked']);
+        $this->assertEquals(0, $row2['days_absent']);
+        $this->assertEquals(1, $row2['days_incomplete']);
         $this->assertEquals(300, $row2['total_worked_minutes']);
     }
 

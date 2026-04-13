@@ -287,6 +287,8 @@ class GenerateReportJob implements ShouldQueue
                 'employee_name' => $employee->full_name,
                 'department' => $employee->department,
                 'days_worked' => $days->where('status', 'present')->count(),
+                'days_absent' => $days->where('status', 'absent')->count(),
+                'days_incomplete' => $days->where('status', 'incomplete')->count(),
                 'total_worked_minutes' => $days->sum('worked_minutes'),
             ];
         })->sortBy('employee_name')->values()->toArray();
