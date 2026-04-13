@@ -11,10 +11,14 @@ class ShiftResolver
     /**
      * Resolve the active shift for an employee on a given date.
      *
-     * Looks up the most recent EmployeeShiftAssignment that covers the date.
+     * Supports multiple concurrent assignments with different work_days.
+     * Returns the shift from the assignment whose work_days includes the
+     * day of week of the given date, preferring the most recently started one.
      */
     public function resolve(int $employeeId, Carbon $date): ?Shift
     {
+        $dayOfWeek = $date->dayOfWeek;
+
         $assignment = EmployeeShiftAssignment::query()
             ->with('shift.breaks')
             ->where('employee_id', $employeeId)
@@ -24,7 +28,8 @@ class ShiftResolver
                     ->orWhereDate('end_date', '>=', $date->toDateString());
             })
             ->orderByDesc('effective_date')
-            ->first();
+            ->get()
+            ->first(fn ($a) => in_array($dayOfWeek, $a->work_days ?? [1, 2, 3, 4, 5]));
 
         return $assignment?->shift;
     }

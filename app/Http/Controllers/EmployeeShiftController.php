@@ -8,7 +8,6 @@ use App\Http\Requests\EmployeeShift\UpdateEmployeeShiftRequest;
 use App\Http\Resources\EmployeeShiftAssignmentResource;
 use App\Models\Employee;
 use App\Models\EmployeeShiftAssignment;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -31,12 +30,6 @@ class EmployeeShiftController extends Controller
     public function store(StoreEmployeeShiftRequest $request): JsonResponse
     {
         $data = $request->validated();
-
-        EmployeeShiftAssignment::query()
-            ->where('employee_id', $data['employee_id'])
-            ->whereNull('end_date')
-            ->whereDate('effective_date', '<', $data['effective_date'])
-            ->update(['end_date' => Carbon::parse($data['effective_date'])->subDay()->toDateString()]);
 
         $assignment = EmployeeShiftAssignment::create($data);
         $assignment->load('shift', 'employee');

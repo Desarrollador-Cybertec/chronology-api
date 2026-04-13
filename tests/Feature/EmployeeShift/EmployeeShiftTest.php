@@ -233,7 +233,41 @@ class EmployeeShiftTest extends TestCase
             ->assertJsonCount(2, 'data');
     }
 
-    public function test_store_closes_previous_open_assignment(): void
+    public function test_store_allows_multiple_concurrent_shift_assignments(): void
+    {
+        $user = User::factory()->superadmin()->create();
+        $employee = Employee::factory()->create();
+        $shiftA = Shift::factory()->create();
+        $shiftB = Shift::factory()->create();
+
+        $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftA->id,
+            'effective_date' => '2025-01-01',
+            'work_days' => [1, 2, 3],
+        ])->assertStatus(201);
+
+        $this->actingAs($user)->postJson('/api/employee-shifts', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftB->id,
+            'effective_date' => '2025-01-01',
+            'work_days' => [4, 5, 6],
+        ])->assertStatus(201);
+
+        $this->assertDatabaseCount('employee_shift_assignments', 2);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftA->id,
+            'end_date' => null,
+        ]);
+        $this->assertDatabaseHas('employee_shift_assignments', [
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftB->id,
+            'end_date' => null,
+        ]);
+    }
+
+    public function test_store_does_not_close_existing_assignments(): void
     {
         $user = User::factory()->superadmin()->create();
         $employee = Employee::factory()->create();
@@ -244,38 +278,6 @@ class EmployeeShiftTest extends TestCase
             'employee_id' => $employee->id,
             'shift_id' => $shiftA->id,
             'effective_date' => '2025-01-01',
-            'end_date' => null,
-        ]);
-
-        $this->actingAs($user)->postJson('/api/employee-shifts', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shiftB->id,
-            'effective_date' => '2025-06-01',
-        ])->assertStatus(201);
-
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'id' => $existing->id,
-            'end_date' => '2025-05-31',
-        ]);
-
-        $this->assertDatabaseHas('employee_shift_assignments', [
-            'employee_id' => $employee->id,
-            'shift_id' => $shiftB->id,
-            'end_date' => null,
-        ]);
-    }
-
-    public function test_store_does_not_close_assignment_starting_same_date(): void
-    {
-        $user = User::factory()->superadmin()->create();
-        $employee = Employee::factory()->create();
-        $shiftA = Shift::factory()->create();
-        $shiftB = Shift::factory()->create();
-
-        $existing = EmployeeShiftAssignment::factory()->create([
-            'employee_id' => $employee->id,
-            'shift_id' => $shiftA->id,
-            'effective_date' => '2025-06-01',
             'end_date' => null,
         ]);
 

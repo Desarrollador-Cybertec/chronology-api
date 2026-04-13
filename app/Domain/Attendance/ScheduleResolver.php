@@ -31,7 +31,9 @@ class ScheduleResolver
             );
         }
 
-        $assignment = EmployeeShiftAssignment::query()
+        $dayOfWeek = $date->dayOfWeek;
+
+        $assignments = EmployeeShiftAssignment::query()
             ->with('shift.breaks')
             ->where('employee_id', $employeeId)
             ->whereDate('effective_date', '<=', $date->toDateString())
@@ -40,9 +42,9 @@ class ScheduleResolver
                     ->orWhereDate('end_date', '>=', $date->toDateString());
             })
             ->orderByDesc('effective_date')
-            ->first();
+            ->get();
 
-        if (! $assignment) {
+        if ($assignments->isEmpty()) {
             return new ScheduleResult(
                 isWorkingDay: true,
                 shift: null,
@@ -50,14 +52,19 @@ class ScheduleResolver
             );
         }
 
-        $workDays = $assignment->work_days ?? [1, 2, 3, 4, 5];
-        $dayOfWeek = $date->dayOfWeek;
+        $matching = $assignments->first(fn ($a) => in_array($dayOfWeek, $a->work_days ?? [1, 2, 3, 4, 5]));
 
-        $isWorkingDay = in_array($dayOfWeek, $workDays);
+        if (! $matching) {
+            return new ScheduleResult(
+                isWorkingDay: false,
+                shift: null,
+                source: 'assignment',
+            );
+        }
 
         return new ScheduleResult(
-            isWorkingDay: $isWorkingDay,
-            shift: $isWorkingDay ? $assignment->shift : null,
+            isWorkingDay: true,
+            shift: $matching->shift,
             source: 'assignment',
         );
     }

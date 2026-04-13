@@ -69,9 +69,42 @@ class ShiftResolverTest extends TestCase
             'end_date' => null,
         ]);
 
-        $resolved = $this->resolver->resolve($employee->id, Carbon::parse('2026-02-15'));
+        // 2026-02-16 is a Monday (day 1) — within default work_days [1,2,3,4,5]
+        $resolved = $this->resolver->resolve($employee->id, Carbon::parse('2026-02-16'));
 
         $this->assertEquals($newShift->id, $resolved->id);
+    }
+
+    public function test_resolves_correct_concurrent_shift_by_work_day(): void
+    {
+        $employee = Employee::factory()->create();
+        $shiftA = Shift::factory()->create(['name' => 'Turno A']);
+        $shiftB = Shift::factory()->create(['name' => 'Turno B']);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftA->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+            'work_days' => [1, 2, 3],
+        ]);
+
+        EmployeeShiftAssignment::factory()->create([
+            'employee_id' => $employee->id,
+            'shift_id' => $shiftB->id,
+            'effective_date' => '2026-01-01',
+            'end_date' => null,
+            'work_days' => [4, 5, 6],
+        ]);
+
+        // 2026-01-13 is a Tuesday (day 2) → shiftA
+        $this->assertEquals($shiftA->id, $this->resolver->resolve($employee->id, Carbon::parse('2026-01-13'))?->id);
+
+        // 2026-01-15 is a Thursday (day 4) → shiftB
+        $this->assertEquals($shiftB->id, $this->resolver->resolve($employee->id, Carbon::parse('2026-01-15'))?->id);
+
+        // 2026-01-18 is a Sunday (day 0) → no match, null
+        $this->assertNull($this->resolver->resolve($employee->id, Carbon::parse('2026-01-18')));
     }
 
     public function test_ignores_expired_assignments(): void
