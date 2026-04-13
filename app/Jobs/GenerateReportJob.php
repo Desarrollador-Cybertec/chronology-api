@@ -153,6 +153,7 @@ class GenerateReportJob implements ShouldQueue
                 $this->report->date_from->toDateString(),
                 $this->report->date_to->toDateString(),
             ])
+            ->where('status', 'present')
             ->where('late_minutes', '>', 0)
             ->orderBy('date_reference')
             ->orderBy('employee_id')

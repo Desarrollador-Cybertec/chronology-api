@@ -516,6 +516,14 @@ class ReportTest extends TestCase
             'status' => 'present',
         ]);
 
+        // Incomplete day with late_minutes — must NOT appear in tardanzas
+        AttendanceDay::factory()->create([
+            'employee_id' => $employee2->id,
+            'date_reference' => '2026-01-12',
+            'late_minutes' => 30,
+            'status' => 'incomplete',
+        ]);
+
         $report = Report::factory()->create([
             'generated_by' => $user->id,
             'type' => 'tardanzas',
