@@ -36,7 +36,7 @@ class ReprocessBatchAction
         $batch->update([
             'status' => 'processing',
             'processed_at' => null,
-            'total_rows' => 0,
+            'total_rows' => $affectedPairs->count(),
             'processed_rows' => 0,
         ]);
 
