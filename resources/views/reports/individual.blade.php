@@ -231,7 +231,7 @@
         </thead>
         <tbody>
             <tr>
-                <td class="metric-label">Días totales</td>
+                <td class="metric-label">Días Trabajados</td>
                 <td class="metric-value">{{ $summary['total_days'] }}</td>
                 <td class="metric-label">Días presentes</td>
                 <td class="metric-value val-green">{{ $summary['days_present'] }}</td>
@@ -243,7 +243,7 @@
                 <td class="metric-value {{ $summary['days_incomplete'] > 0 ? 'val-orange' : '' }}">{{ $summary['days_incomplete'] }}</td>
             </tr>
             <tr>
-                <td class="metric-label">Veces tarde</td>
+                <td class="metric-label">Dias tarde</td>
                 <td class="metric-value {{ $summary['times_late'] > 0 ? 'val-red' : '' }}">{{ $summary['times_late'] }}</td>
                 <td class="metric-label">Tiempo trabajado</td>
                 <td class="metric-value">{{ fmtMin($summary['total_worked_minutes']) }}</td>
