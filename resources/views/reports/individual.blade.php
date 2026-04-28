@@ -251,17 +251,11 @@
             <tr>
                 <td class="metric-label">Min. tardanza total</td>
                 <td class="metric-value {{ $summary['total_late_minutes'] > 0 ? 'val-red' : '' }}">{{ fmtMin($summary['total_late_minutes']) }}</td>
-                <td class="metric-label">Horas extra</td>
-                <td class="metric-value {{ $summary['total_overtime_minutes'] > 0 ? 'val-green' : '' }}">{{ fmtMin($summary['total_overtime_minutes']) }}</td>
+                <td class="metric-label"></td>
+                <td class="metric-value"></td>
             </tr>
             <tr>
-                <td class="metric-label">HE diurnas</td>
-                <td class="metric-value">{{ fmtMin($summary['total_overtime_diurnal_minutes']) }}</td>
-                <td class="metric-label">HE nocturnas</td>
-                <td class="metric-value">{{ fmtMin($summary['total_overtime_nocturnal_minutes']) }}</td>
-            </tr>
-            <tr>
-                <td class="metric-label">Salida temprana</td>
+                <td class="metric-label">Min. salida temprana</td>
                 <td class="metric-value {{ $summary['total_early_departure_minutes'] > 0 ? 'val-orange' : '' }}">{{ fmtMin($summary['total_early_departure_minutes']) }}</td>
                 <td class="metric-label"></td>
                 <td class="metric-value"></td>
@@ -282,9 +276,6 @@
                 <th>Trabajado</th>
                 <th>Tardanza</th>
                 <th>Salida temprana</th>
-                <th>Horas extra</th>
-                <th>HE diurnas</th>
-                <th>HE nocturnas</th>
                 <th>Estado</th>
             </tr>
         </thead>
@@ -307,9 +298,6 @@
                 <td>{{ fmtMin($row['worked_minutes']) }}</td>
                 <td class="{{ $row['late_minutes'] > 0 ? 'val-red' : 'val-muted' }}">{{ fmtMin($row['late_minutes']) }}</td>
                 <td class="{{ $row['early_departure_minutes'] > 0 ? 'val-orange' : 'val-muted' }}">{{ fmtMin($row['early_departure_minutes']) }}</td>
-                <td class="{{ $row['overtime_minutes'] > 0 ? 'val-green' : 'val-muted' }}">{{ fmtMin($row['overtime_minutes']) }}</td>
-                <td class="{{ $row['overtime_diurnal_minutes'] > 0 ? 'val-green' : 'val-muted' }}">{{ fmtMin($row['overtime_diurnal_minutes']) }}</td>
-                <td class="{{ $row['overtime_nocturnal_minutes'] > 0 ? 'val-green' : 'val-muted' }}">{{ fmtMin($row['overtime_nocturnal_minutes']) }}</td>
                 <td><span class="badge {{ $st['class'] }}">{{ $st['label'] }}</span></td>
             </tr>
         @endforeach
