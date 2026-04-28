@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Employee\ImportEmployeeEmailsAction;
 use App\Http\Requests\Employee\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
@@ -77,6 +78,22 @@ class EmployeeController extends Controller
         $employee->update($request->validated());
 
         return new EmployeeResource($employee);
+    }
+
+    public function importEmails(Request $request, ImportEmployeeEmailsAction $action): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $result = $action->execute($request->file('file'));
+
+        return response()->json([
+            'message'  => "Se asignaron correos a {$result['matched']} empleados.",
+            'matched'  => $result['matched'],
+            'unmatched' => $result['unmatched'],
+            'unmatched_names' => $result['unmatched_names'],
+        ]);
     }
 
     public function toggleActive(Employee $employee): JsonResponse

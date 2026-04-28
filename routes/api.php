@@ -56,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports', [ReportController::class, 'index']);
         Route::post('/reports', [ReportController::class, 'store']);
         Route::get('/reports/{report}', [ReportController::class, 'show']);
+        Route::get('/reports/{report}/download', [ReportController::class, 'download']);
+        Route::post('/reports/{report}/send-email', [ReportController::class, 'sendEmail']);
         Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
     });
 
@@ -67,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:superadmin')->group(function () {
         Route::apiResource('employees', EmployeeController::class)->only(['update']);
         Route::patch('/employees/{employee}/toggle-active', [EmployeeController::class, 'toggleActive']);
+        Route::post('/employees/import-emails', [EmployeeController::class, 'importEmails']);
         Route::apiResource('shifts', ShiftController::class)->only(['store', 'update', 'destroy']);
         Route::put('/attendance/{attendanceDay}', [AttendanceController::class, 'update']);
 

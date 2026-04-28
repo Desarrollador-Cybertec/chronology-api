@@ -15,6 +15,7 @@ class Employee extends Model
         'internal_id',
         'first_name',
         'last_name',
+        'email',
         'department',
         'position',
         'is_active',

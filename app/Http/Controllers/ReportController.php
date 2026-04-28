@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Http\Resources\ReportResource;
 use App\Jobs\GenerateReportJob;
+use App\Jobs\SendReportEmailJob;
 use App\Models\Report;
 use App\Services\LicenseService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 
 class ReportController extends Controller
@@ -63,6 +66,36 @@ class ReportController extends Controller
         $report->load('employee', 'generatedBy');
 
         return new ReportResource($report);
+    }
+
+    public function download(Report $report): Response
+    {
+        abort_unless($report->type === 'individual' && $report->status === 'completed', 422, 'El reporte debe ser de tipo individual y estar completado.');
+
+        $report->load('employee');
+
+        $pdf = Pdf::loadView('reports.individual', [
+            'report'  => $report,
+            'summary' => $report->summary,
+            'rows'    => $report->rows,
+        ]);
+
+        $filename = 'reporte_' . str_replace(' ', '_', strtolower($report->employee->full_name)) . '_' . $report->date_from->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function sendEmail(Report $report): JsonResponse
+    {
+        abort_unless($report->type === 'individual' && $report->status === 'completed', 422, 'El reporte debe ser de tipo individual y estar completado.');
+
+        $report->load('employee');
+
+        abort_unless($report->employee && $report->employee->email, 422, 'El empleado no tiene correo electrónico registrado.');
+
+        SendReportEmailJob::dispatch($report);
+
+        return response()->json(['message' => 'El reporte será enviado al correo del empleado en breve.']);
     }
 
     public function destroy(Report $report): JsonResponse
