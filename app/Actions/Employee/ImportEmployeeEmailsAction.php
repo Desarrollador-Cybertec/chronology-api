@@ -8,10 +8,11 @@ use Illuminate\Http\UploadedFile;
 class ImportEmployeeEmailsAction
 {
     /**
-     * Mínimo score promedio de tokens para considerar un match válido.
-     * 0.72 = cada palabra del nombre corto debe coincidir al ~72% con alguna del nombre largo.
+     * Score mínimo para aceptar un match.
+     * Se aplica solo cuando hay ≥2 tokens; nombres de 1 sola palabra requieren 0.85.
      */
-    private const TOKEN_THRESHOLD = 0.72;
+    private const THRESHOLD      = 0.52;
+    private const SINGLE_THRESHOLD = 0.85;
 
     public function execute(UploadedFile $file): array
     {
@@ -32,9 +33,9 @@ class ImportEmployeeEmailsAction
         $employees = Employee::query()->where('is_active', true)->get();
 
         $normalizedEmployees = $employees->map(fn (Employee $e) => [
-            'model'      => $e,
-            'tokens'     => $this->tokenize($e->full_name),
-            'normalized' => $this->normalize($e->full_name),
+            'model'  => $e,
+            'tokens' => $this->tokenize($e->full_name),
+            'norm'   => $this->normalize($e->full_name),
         ]);
 
         $matched   = 0;
@@ -54,8 +55,8 @@ class ImportEmployeeEmailsAction
                 continue;
             }
 
-            $csvTokens     = $this->tokenize($csvName);
-            $csvNormalized = $this->normalize($csvName);
+            $csvTokens = $this->tokenize($csvName);
+            $csvNorm   = $this->normalize($csvName);
 
             if (empty($csvTokens)) {
                 continue;
@@ -65,19 +66,20 @@ class ImportEmployeeEmailsAction
             $bestScore = 0.0;
 
             foreach ($normalizedEmployees as $entry) {
-                $score = $this->scoreMatch($csvTokens, $csvNormalized, $entry['tokens'], $entry['normalized']);
-
+                $score = $this->scoreMatch($csvTokens, $csvNorm, $entry['tokens'], $entry['norm']);
                 if ($score > $bestScore) {
                     $bestScore = $score;
                     $best      = $entry['model'];
                 }
             }
 
-            if ($best && $bestScore >= self::TOKEN_THRESHOLD) {
+            $threshold = count($csvTokens) === 1 ? self::SINGLE_THRESHOLD : self::THRESHOLD;
+
+            if ($best && $bestScore >= $threshold) {
                 $best->update(['email' => $email]);
                 $matched++;
             } else {
-                $unmatched[] = mb_convert_encoding($csvName, 'UTF-8', 'UTF-8');
+                $unmatched[] = $this->safeUtf8($csvName);
             }
         }
 
@@ -91,88 +93,119 @@ class ImportEmployeeEmailsAction
     }
 
     /**
-     * Score combinado: token-by-token + string completo. Toma el mayor.
+     * Score combinado: token-by-token + string completo + bonus por primer token.
      *
-     * Token score: por cada token del nombre más corto, busca el mejor
-     * match entre los tokens del nombre más largo. El score final es
-     * el promedio de esos mejores matches. Esto permite que "Karolay Martinez"
-     * encuentre a "KAROLAY ANDREA MARTINEZ SERRANO" con score ~1.0.
+     * • Token score: cada token del nombre más corto busca su mejor pareja
+     *   en el nombre más largo → promedio. Tolera palabras extra (apellidos
+     *   adicionales) sin penalizar.
+     * • String score: similar_text sobre el string completo normalizado.
+     * • Bonus: si el primer token de ambos coincide ≥90 % se suma +0.10
+     *   para priorizar matches donde el primer nombre es igual.
      */
     private function scoreMatch(array $tokensA, string $normA, array $tokensB, string $normB): float
     {
-        // Usar el más corto como referencia para no penalizar palabras extra
         [$shorter, $longer] = count($tokensA) <= count($tokensB)
             ? [$tokensA, $tokensB]
             : [$tokensB, $tokensA];
 
+        // Token score
         $tokenScore = 0.0;
-
         foreach ($shorter as $word) {
             $best = 0.0;
             foreach ($longer as $candidate) {
                 similar_text($word, $candidate, $pct);
-                if ($pct > $best) {
-                    $best = $pct;
+                $phonetic = $this->phoneticScore($word, $candidate);
+                $wordScore = max($pct / 100, $phonetic);
+                if ($wordScore > $best) {
+                    $best = $wordScore;
                 }
             }
-            $tokenScore += $best / 100;
+            $tokenScore += $best;
         }
+        $tokenScore /= count($shorter);
 
-        $tokenScore = $tokenScore / count($shorter);
-
-        // Score de string completo como fallback para nombres de una sola palabra
+        // String score
         similar_text($normA, $normB, $fullPct);
         $fullScore = $fullPct / 100;
 
-        return max($tokenScore, $fullScore);
+        $score = max($tokenScore, $fullScore);
+
+        // Bonus: primer nombre muy similar en ambas listas
+        if (! empty($tokensA) && ! empty($tokensB)) {
+            similar_text($tokensA[0], $tokensB[0], $firstPct);
+            if ($firstPct >= 90) {
+                $score = min(1.0, $score + 0.10);
+            }
+        }
+
+        return $score;
     }
 
     /**
-     * Normaliza: minúsculas, sin tildes, sin caracteres especiales, espacios simples.
+     * Score fonético usando soundex: 1.0 si igual soundex, 0.5 si primer char igual, 0 si no.
+     */
+    private function phoneticScore(string $a, string $b): float
+    {
+        if (strlen($a) < 2 || strlen($b) < 2) {
+            return 0.0;
+        }
+
+        if (soundex($a) === soundex($b)) {
+            return 0.92;
+        }
+
+        if (metaphone($a) === metaphone($b)) {
+            return 0.88;
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Normaliza: minúsculas → iconv TRANSLIT (convierte tildes a ASCII) → espacios simples.
+     * NO stripea bytes antes de iconv para no corromper multibyte UTF-8.
      */
     private function normalize(string $name): string
     {
-        $name = mb_strtolower(trim($name));
-        // Reemplazar caracteres corruptos comunes por encoding incorrecto
-        $name = preg_replace('/[^\x20-\x7E]/', '', $name);
+        $name   = mb_strtolower(trim($name));
         $result = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name);
 
-        return preg_replace('/\s+/', ' ', trim((string) $result));
+        // Eliminar caracteres no alfanuméricos excepto espacios
+        $result = preg_replace('/[^a-z0-9 ]/i', '', (string) $result);
+
+        return preg_replace('/\s+/', ' ', trim($result));
     }
 
     /**
-     * Devuelve array de palabras normalizadas, filtrando palabras de 1 letra.
+     * Palabras normalizadas de longitud > 1.
      */
     private function tokenize(string $name): array
     {
-        $normalized = $this->normalize($name);
-        $words      = explode(' ', $normalized);
+        $words = explode(' ', $this->normalize($name));
 
         return array_values(array_filter($words, fn ($w) => strlen($w) > 1));
     }
 
     /**
-     * Limpia el campo email: elimina espacios, saltos de línea, BOM, y toma
-     * el primer email si hay varios separados por // o coma.
+     * Limpia el campo email: elimina espacios, saltos de línea, BOM.
+     * Si hay varios emails (// o ,) toma el primero válido.
      */
     private function cleanEmail(string $raw): string
     {
         $email = trim(preg_replace('/[\r\n\x{FEFF}]/u', '', $raw));
 
-        // Si hay múltiples emails (separados por // o ,), tomar el primero válido
         foreach (preg_split('/[\/,]+/', $email) as $part) {
             $part = trim($part);
             if (filter_var($part, FILTER_VALIDATE_EMAIL)) {
-                return $part;
+                return strtolower($part);
             }
         }
 
-        // Retornar aunque no pase validación estricta (podría tener dominio interno)
         return strtolower($email);
     }
 
     /**
-     * Convierte a UTF-8 desde Windows-1252 si el string no es UTF-8 válido.
+     * Convierte a UTF-8 si el string no es UTF-8 válido (viene en Windows-1252).
      */
     private function toUtf8(string $value): string
     {
@@ -181,6 +214,14 @@ class ImportEmployeeEmailsAction
         }
 
         return mb_convert_encoding($value, 'UTF-8', 'Windows-1252');
+    }
+
+    /**
+     * Garantiza que el string sea UTF-8 válido para incluirlo en la respuesta JSON.
+     */
+    private function safeUtf8(string $value): string
+    {
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 
     private function findColumn(array $header, array $candidates): int
