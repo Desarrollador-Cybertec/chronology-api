@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Report\StoreReportRequest;
 use App\Http\Resources\ReportResource;
+use App\Jobs\DispatchBatchReportEmailsJob;
 use App\Jobs\GenerateReportJob;
 use App\Jobs\SendReportEmailJob;
+use App\Models\Employee;
 use App\Models\Report;
 use App\Services\LicenseService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -83,6 +85,33 @@ class ReportController extends Controller
         $filename = 'reporte_' . str_replace(' ', '_', strtolower($report->employee->full_name)) . '_' . $report->date_from->format('Y-m-d') . '.pdf';
 
         return $pdf->download($filename);
+    }
+
+    public function sendBatchEmails(Request $request, Report $report): JsonResponse
+    {
+        abort_unless($report->type === 'general' && $report->status === 'completed', 422, 'El reporte debe ser de tipo general y estar completado.');
+
+        $totalEmployees = Employee::query()
+            ->where('is_active', true)
+            ->whereNotNull('email')
+            ->where('email', '!=', '')
+            ->count();
+
+        abort_if($totalEmployees === 0, 422, 'No hay empleados activos con correo registrado.');
+
+        DispatchBatchReportEmailsJob::dispatch(
+            $report->date_from->toDateString(),
+            $report->date_to->toDateString(),
+            $request->user()->id,
+        );
+
+        $hoursNeeded = ceil($totalEmployees / 15);
+
+        return response()->json([
+            'message'         => "Se programó el envío para {$totalEmployees} empleados a razón de 15 por hora.",
+            'total_employees' => $totalEmployees,
+            'estimated_hours' => $hoursNeeded,
+        ]);
     }
 
     public function sendEmail(Report $report): JsonResponse

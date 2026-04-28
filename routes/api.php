@@ -57,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/reports', [ReportController::class, 'store']);
         Route::get('/reports/{report}', [ReportController::class, 'show']);
         Route::get('/reports/{report}/download', [ReportController::class, 'download']);
+        Route::post('/reports/{report}/send-batch-emails', [ReportController::class, 'sendBatchEmails']);
         Route::post('/reports/{report}/send-email', [ReportController::class, 'sendEmail']);
         Route::delete('/reports/{report}', [ReportController::class, 'destroy']);
     });
