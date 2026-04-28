@@ -30,12 +30,12 @@
 
         <div class="summary-box">
             <h3>Resumen</h3>
-            <div class="summary-row"><span>Días presentes</span><span>{{ $summary['days_present'] }}</span></div>
-            <div class="summary-row"><span>Días ausentes</span><span>{{ $summary['days_absent'] }}</span></div>
-            <div class="summary-row"><span>Días incompletos</span><span>{{ $summary['days_incomplete'] }}</span></div>
-            <div class="summary-row"><span>Tardanzas</span><span>{{ $summary['times_late'] }}</span></div>
-            <div class="summary-row"><span>Horas trabajadas</span><span>{{ number_format($summary['total_worked_minutes'] / 60, 1) }} h</span></div>
-            <div class="summary-row"><span>Horas extra</span><span>{{ number_format($summary['total_overtime_minutes'] / 60, 1) }} h</span></div>
+            <div class="summary-row"><span>Días presentes </span><span>{{ $summary['days_present'] }}</span></div>
+            <div class="summary-row"><span>Días ausentes </span><span>{{ $summary['days_absent'] }}</span></div>
+            <div class="summary-row"><span>Días incompletos </span><span>{{ $summary['days_incomplete'] }}</span></div>
+            <div class="summary-row"><span>Tardanzas </span><span>{{ $summary['times_late'] }}</span></div>
+            <div class="summary-row"><span>Horas trabajadas </span><span>{{ number_format($summary['total_worked_minutes'] / 60, 1) }} h</span></div>
+            <div class="summary-row"><span>Horas extra </span><span>{{ number_format($summary['total_overtime_minutes'] / 60, 1) }} h</span></div>
         </div>
 
         <p style="font-size:12px;color:#718096;">El detalle completo día por día se encuentra en el archivo PDF adjunto.</p>
