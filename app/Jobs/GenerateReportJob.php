@@ -39,6 +39,18 @@ class GenerateReportJob implements ShouldQueue
                 1,
                 'report_'.$this->report->id,
             );
+
+            if ($this->report->type === 'individual' && $this->report->employee?->email) {
+                SendReportEmailJob::dispatch($this->report);
+            }
+
+            if ($this->report->type === 'general') {
+                DispatchBatchReportEmailsJob::dispatch(
+                    $this->report->date_from->toDateString(),
+                    $this->report->date_to->toDateString(),
+                    $this->report->generated_by,
+                );
+            }
         } catch (\Throwable $e) {
             $this->report->update([
                 'status' => 'failed',
