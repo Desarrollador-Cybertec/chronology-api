@@ -38,7 +38,9 @@ class SendReportEmailJob implements ShouldQueue
         } catch (UnexpectedResponseException $e) {
             // Errores SMTP permanentes (550 usuario inexistente, etc.) no tienen caso reintentar
             if (str_starts_with((string) $e->getCode(), '5')) {
-                $this->fail($e);
+                $this->fail(new \RuntimeException(
+                    "SMTP {$e->getCode()}: no se pudo entregar a {$this->report->employee->email}"
+                ));
                 return;
             }
             throw $e;
