@@ -186,11 +186,13 @@
 @php
     $logoBase64 = base64_encode(file_get_contents(public_path('LOGO-04-1.png')));
 
-    function fmtMin(int $min): string {
-        if ($min <= 0) return '0m';
-        $h = intdiv($min, 60);
-        $m = $min % 60;
-        return $h > 0 ? "{$h}h {$m}m" : "{$m}m";
+    if (!function_exists('fmtMin')) {
+        function fmtMin(int $min): string {
+            if ($min <= 0) return '0m';
+            $h = intdiv($min, 60);
+            $m = $min % 60;
+            return $h > 0 ? "{$h}h {$m}m" : "{$m}m";
+        }
     }
 @endphp
 
