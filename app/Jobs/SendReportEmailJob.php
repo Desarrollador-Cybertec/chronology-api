@@ -7,6 +7,7 @@ use App\Models\Report;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Mail;
+use Symfony\Component\Mailer\Exception\UnexpectedResponseException;
 
 class SendReportEmailJob implements ShouldQueue
 {
@@ -31,7 +32,16 @@ class SendReportEmailJob implements ShouldQueue
             return;
         }
 
-        Mail::to($this->report->employee->email)
-            ->send(new IndividualReportMail($this->report));
+        try {
+            Mail::to($this->report->employee->email)
+                ->send(new IndividualReportMail($this->report));
+        } catch (UnexpectedResponseException $e) {
+            // Errores SMTP permanentes (550 usuario inexistente, etc.) no tienen caso reintentar
+            if (str_starts_with((string) $e->getCode(), '5')) {
+                $this->fail($e);
+                return;
+            }
+            throw $e;
+        }
     }
 }
